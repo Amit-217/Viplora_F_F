@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0e3d3e;
+  --color-secondary: #FF9F1C;
+  --color-background-light: #f6f8f8;
+  --color-background-dark: #131f1f;
+}
+
+:root {
+  --primary: #0e3d3e;
+  --secondary: #FF9F1C;
+}
+
+body {
+  @apply bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 overflow-x-hidden;
+}
+
+.btn-primary {
+  @apply bg-primary text-white px-6 py-3 rounded-xl font-bold transition-all;
+}
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-white px-6 py-3 rounded-xl font-bold transition-all;
+}
+.btn-secondary:hover {
+  opacity: 0.9;
+}
