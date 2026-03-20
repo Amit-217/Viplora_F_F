@@ -4,6 +4,7 @@ import api from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit, Trash2, X, BookOpen, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { resolveImageUrl, handleImgError } from '../../utils/imageUrl';
 
 const ManageBlog = () => {
   const [blogs, setBlogs] = useState([]);
@@ -98,7 +99,12 @@ const ManageBlog = () => {
                   <tr key={blog._id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
-                        <img src={blog.image} className="w-12 h-12 rounded-xl object-cover" alt="" />
+                        <img 
+                          src={resolveImageUrl(blog.image)} 
+                          onError={handleImgError}
+                          className="w-12 h-12 rounded-xl object-cover" 
+                          alt="" 
+                        />
                         <span className="font-bold text-gray-900 line-clamp-1">{blog.title}</span>
                       </div>
                     </td>

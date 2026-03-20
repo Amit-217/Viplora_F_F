@@ -1,8 +1,40 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
+import api from '../../services/api';
+import { contactInfo } from '../../config/contactInfo';
+
+const programsFallback = [
+  { name: 'Child Education', path: '/programs/education' },
+  { name: 'Safe Water', path: '/programs/water' },
+  { name: 'Health Care', path: '/programs/health' },
+  { name: 'Farmer Support', path: '/programs/farmers' },
+  { name: 'Environment', path: '/programs/environment' },
+];
+
+type ProgramLink = { name: string; path: string };
 
 const Footer = () => {
+  const [programLinks, setProgramLinks] = useState<ProgramLink[]>(programsFallback);
+
+  useEffect(() => {
+    const loadPrograms = async () => {
+      try {
+        const { data } = await api.get('/programs');
+        if (Array.isArray(data) && data.length) {
+          const links = data.slice(0, 5).map((p: any) => ({
+            name: p.title || p.name || 'Program',
+            path: `/programs/${p.slug || p._id || ''}`,
+          }));
+          setProgramLinks(links);
+        }
+      } catch {
+        setProgramLinks(programsFallback);
+      }
+    };
+    loadPrograms();
+  }, []);
+
   return (
     <footer className="bg-gray-900 text-white pt-20 pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -46,7 +78,17 @@ const Footer = () => {
               <li><Link to="/programs" className="hover:text-primary transition-colors">Our Programs</Link></li>
               <li><Link to="/volunteer" className="hover:text-primary transition-colors">Volunteer</Link></li>
               <li><Link to="/donate" className="hover:text-primary transition-colors">Donate Now</Link></li>
-              <li><Link to="/contact" className="hover:text-primary transition-colors">Contact Us</Link></li>
+              <li>
+                <a 
+                  href={contactInfo.contactUrl} 
+                  className="hover:text-primary transition-colors" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  Contact Us
+                </a>
+              </li>
+              <li><Link to="/admin/login" className="hover:text-primary transition-colors">Admin Login</Link></li>
             </ul>
           </div>
 
@@ -54,11 +96,13 @@ const Footer = () => {
           <div>
             <h3 className="text-xl font-bold mb-6">Our Programs</h3>
             <ul className="space-y-4 text-gray-400">
-              <li><Link to="/programs/education" className="hover:text-primary transition-colors">Child Education</Link></li>
-              <li><Link to="/programs/water" className="hover:text-primary transition-colors">Safe Water</Link></li>
-              <li><Link to="/programs/health" className="hover:text-primary transition-colors">Health Care</Link></li>
-              <li><Link to="/programs/farmers" className="hover:text-primary transition-colors">Farmer Support</Link></li>
-              <li><Link to="/programs/environment" className="hover:text-primary transition-colors">Environment</Link></li>
+              {programLinks.map((item) => (
+                <li key={item.path}>
+                  <Link to={item.path} className="hover:text-primary transition-colors">
+                    {item.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -68,15 +112,42 @@ const Footer = () => {
             <ul className="space-y-4 text-gray-400">
               <li className="flex gap-3">
                 <MapPin className="text-primary shrink-0" />
-                <span>123 NGO Street, Hope City, IND</span>
+                <a 
+                  href={contactInfo.contactUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-primary transition-colors"
+                >
+                  {contactInfo.address}
+                </a>
               </li>
               <li className="flex gap-3">
                 <Phone className="text-primary shrink-0" />
-                <span>+91 98765 43210</span>
+                <div className="space-y-1">
+                  {[contactInfo.phone, contactInfo.phoneAlt].filter(Boolean).map((num) => (
+                    <a 
+                      key={num}
+                      href={`tel:${num.replace(/\\s+/g, '')}`} 
+                      className="hover:text-primary transition-colors block"
+                    >
+                      {num}
+                    </a>
+                  ))}
+                </div>
               </li>
               <li className="flex gap-3">
                 <Mail className="text-primary shrink-0" />
-                <span>info@viplora.org</span>
+                <div className="space-y-1">
+                  {[contactInfo.email, contactInfo.emailAlt].filter(Boolean).map((mail) => (
+                    <a 
+                      key={mail}
+                      href={`mailto:${mail}`} 
+                      className="hover:text-primary transition-colors block"
+                    >
+                      {mail}
+                    </a>
+                  ))}
+                </div>
               </li>
             </ul>
           </div>

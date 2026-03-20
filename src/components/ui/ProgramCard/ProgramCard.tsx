@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, ChevronRight, Target } from 'lucide-react';
+import { resolveImageUrl, handleImgError } from '../../../utils/imageUrl';
 
 interface ProgramCardProps {
   program: {
@@ -27,7 +28,8 @@ const ProgramCard: React.FC<ProgramCardProps> = ({ program }) => {
       {/* Image Section */}
       <div className="relative h-20 w-20 lg:h-72 lg:w-full shrink-0 overflow-hidden rounded-xl lg:rounded-none">
         <img 
-          src={program.image} 
+          src={resolveImageUrl(program.image)} 
+          onError={handleImgError}
           alt={program.title} 
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />

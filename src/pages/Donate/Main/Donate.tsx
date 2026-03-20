@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
 import { motion } from 'framer-motion';
 import { Heart, ShieldCheck, CreditCard, User, Mail, Phone, ChevronRight } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { contactInfo } from '../../../config/contactInfo';
 
 const amounts = [100, 500, 1000, 2000, 5000];
 
@@ -22,48 +24,7 @@ const Donate = () => {
   const [loading, setLoading] = useState(false);
 
   const handlePayment = async () => {
-    setLoading(true);
-    const amount = customAmount ? parseInt(customAmount) : selectedAmount;
-
-    try {
-      const { data: order } = await api.post('/donations/order', {
-        amount,
-        programId: programId || "65f8a0000000000000000000", // Default or general fund
-        donorDetails,
-        isAnonymous: false
-      });
-
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_your_key',
-        amount: order.amount,
-        currency: "INR",
-        name: "VIPLORA Foundation",
-        description: "Donation for Impact",
-        order_id: order.id,
-        handler: async (response: any) => {
-          const verifyRes = await api.post('/donations/verify', response);
-          if (verifyRes.data.message === "Payment verified successfully") {
-            navigate('/donate/success');
-          }
-        },
-        prefill: {
-          name: donorDetails.name,
-          email: donorDetails.email,
-          contact: donorDetails.phone
-        },
-        theme: {
-          color: "#2D5F2E"
-        }
-      };
-
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
-    } catch (err) {
-      console.error(err);
-      alert("Payment failed to initialize");
-    } finally {
-      setLoading(false);
-    }
+    toast.error(`Payments are temporarily unavailable. Please contact ${contactInfo.phone} or ${contactInfo.email} to donate.`, { duration: 6000 });
   };
 
   return (
@@ -208,7 +169,11 @@ const Donate = () => {
                 { title: 'Credit / Debit Card', desc: 'Visa, Mastercard, RuPay', icon: CreditCard },
                 { title: 'Net Banking', desc: 'All major Indian banks', icon: ShieldCheck }
               ].map((method, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-primary/5 rounded-xl border border-primary/5 cursor-pointer hover:bg-primary/5 transition-colors">
+                <div 
+                  key={idx} 
+                  onClick={handlePayment}
+                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-primary/5 rounded-xl border border-primary/5 cursor-pointer hover:bg-primary/5 transition-colors"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                       <method.icon size={20} />

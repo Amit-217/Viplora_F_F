@@ -1,5 +1,6 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
   GraduationCap, 
@@ -10,15 +11,31 @@ import {
   ChevronRight, 
   ShieldCheck, 
   Users, 
-  FileText 
+  FileText
 } from 'lucide-react';
+import { contactInfo } from '../../config/contactInfo';
+import { resolveImageUrl, handleImgError } from '../../utils/imageUrl';
 
 const Home = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const slideImages = [
+    '/edu.jfif',
+    '/edu1.jfif',
+    'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=2070'
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slideImages.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+
   const stats = [
-    { label: 'Lives Impacted', value: '5000+', icon: Users },
-    { label: 'Programs', value: '120+', icon: FileText },
-    { label: 'Volunteers', value: '300+', icon: Heart },
-    { label: 'CSR Partners', value: '20+', icon: ShieldCheck },
+    { label: 'Lives Impacted', value: '10+', icon: Users },
+    { label: 'Programs', value: '01+', icon: FileText },
+    { label: 'Volunteers', value: '08+', icon: Heart },
+    { label: 'CSR Partners', value: '0', icon: ShieldCheck },
   ];
 
   const initiatives = [
@@ -44,23 +61,22 @@ const Home = () => {
     },
   ];
 
-  const featuredPrograms = [
-    {
-      title: 'Digital Education',
-      desc: 'Bridging the digital divide by setting up computer labs in rural schools.',
-      img: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=2532'
-    },
-    {
-      title: 'AI Awareness',
-      desc: 'Educating youth about the future of technology and ethical AI usage.',
-      img: 'https://images.unsplash.com/photo-1620712943767-6a683cf30f5d?q=80&w=2670'
-    },
-    {
-      title: 'Community Food',
-      desc: 'Building local food banks to ensure zero hunger in our neighborhoods.',
-      img: 'https://images.unsplash.com/photo-1542838132-92c5333f49ca?q=80&w=2070'
-    }
-  ];
+  const [featuredPrograms, setFeaturedPrograms] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        const { data } = await api.get('/programs');
+        if (data && data.length > 0) {
+          setFeaturedPrograms(data.slice(0, 3));
+        }
+      } catch (err) {
+        console.error("Failed to fetch featured programs", err);
+      }
+    };
+    fetchFeatured();
+  }, []);
+
 
   return (
     <div className="w-full bg-background-light dark:bg-background-dark overflow-hidden">
@@ -69,6 +85,7 @@ const Home = () => {
       <section className="min-h-[720px] pt-24 bg-gradient-to-br from-primary/5 via-white to-primary/10 dark:from-primary/20 dark:via-background-dark dark:to-background-dark flex items-center">
         <div className="max-w-[1320px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="flex flex-col gap-8">
+
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -101,19 +118,64 @@ const Home = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="relative h-[480px] w-full bg-slate-200 dark:bg-slate-800 rounded-3xl overflow-hidden shadow-2xl"
+            className="relative h-[480px] w-full bg-slate-200 dark:bg-slate-800 rounded-3xl overflow-hidden shadow-2xl group"
           >
-            <img 
-              src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=2070" 
-              className="w-full h-full object-cover" 
-              alt="Diverse students learning happily together" 
-            />
+            <AnimatePresence mode="popLayout">
+              <motion.img 
+                key={currentSlide}
+                src={slideImages[currentSlide]}
+                initial={{ opacity: 0, scale: 1.05 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.8, ease: "easeInOut" }}
+                className="absolute inset-0 w-full h-full object-cover" 
+                alt="Viplora Foundation Educational Initiatives" 
+              />
+            </AnimatePresence>
+            
+            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+            
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-10">
+              {slideImages.map((_, i) => (
+                <button 
+                  key={i} 
+                  onClick={() => setCurrentSlide(i)}
+                  className={`h-2.5 rounded-full transition-all duration-500 shadow-md ${currentSlide === i ? 'w-10 bg-white' : 'w-2.5 bg-white/40 hover:bg-white/80'}`} 
+                />
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Newly Started Full Width Banner */}
+      <section className="bg-white dark:bg-background-dark relative z-10 pt-12">
+        <div className="max-w-[1320px] mx-auto px-6 pb-6 border-b border-slate-50 dark:border-slate-800/50">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-col md:flex-row items-center justify-between gap-6"
+          >
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 shrink-0 bg-white dark:bg-slate-800 text-green-500 rounded-2xl flex items-center justify-center relative shadow-lg border border-slate-100 dark:border-slate-700">
+                <span className="absolute -top-2 -right-2 flex h-4 w-4">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500"></span>
+                </span>
+                <Sprout size={32} />
+              </div>
+              <p className="font-black text-slate-900 dark:text-white text-2xl md:text-4xl tracking-tight">Newly started viplora</p>
+            </div>
+            <Link to="/programs" className="text-white bg-primary font-bold text-lg flex items-center gap-2 group whitespace-nowrap px-10 py-5 rounded-2xl shadow-xl shadow-primary/30 hover:shadow-2xl hover:-translate-y-1 transition-all w-full md:w-auto justify-center">
+              Join now <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
           </motion.div>
         </div>
       </section>
 
       {/* Section 2: Impact / Stats */}
-      <section className="py-20 bg-white dark:bg-background-dark">
+      <section className="pt-8 pb-20 bg-white dark:bg-background-dark">
         <div className="max-w-[1320px] mx-auto px-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
@@ -172,19 +234,26 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredPrograms.map((program, index) => (
               <motion.div 
-                key={index}
+                key={program._id || index}
                 whileHover={{ scale: 1.02 }}
                 className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all"
               >
-                <div className="h-48 w-full bg-slate-200 dark:bg-slate-800">
-                  <img src={program.img} alt={program.title} className="w-full h-full object-cover" />
+                <div className="h-56 w-full relative bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                  <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors z-10 pointer-events-none" />
+                  <img 
+                    src={resolveImageUrl(program.image)} 
+                    onError={handleImgError}
+                    alt={`${program.title} - Viplora Platform Initiative`} 
+                    loading="lazy" 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                  />
                 </div>
                 <div className="p-6">
-                  <h4 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">{program.title}</h4>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 leading-relaxed">{program.desc}</p>
-                  <a className="text-primary font-semibold text-sm hover:underline flex items-center gap-1" href="#">
+                  <h4 className="text-xl font-bold mb-3 text-slate-900 dark:text-white line-clamp-1">{program.title}</h4>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 leading-relaxed line-clamp-2">{program.shortDescription || program.description}</p>
+                  <Link to={`/programs/${program.slug}`} className="text-primary font-semibold text-sm hover:underline flex items-center gap-1">
                     Learn More <ChevronRight size={14} />
-                  </a>
+                  </Link>
                 </div>
               </motion.div>
             ))}
@@ -192,7 +261,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Section 5: Volunteer CTA */}
+
+      {/* Section 6: Volunteer CTA */}
       <section className="py-20">
         <div className="max-w-[1320px] mx-auto px-6">
           <div className="bg-primary rounded-[2rem] p-12 lg:p-20 text-center relative overflow-hidden">
@@ -214,25 +284,26 @@ const Home = () => {
       </section>
 
       {/* Section 6: CSR */}
-      <section className="py-24 border-t border-slate-100 dark:border-slate-800">
+      <section className="py-24 border-t border-slate-100 dark:border-slate-800 bg-gradient-to-b from-white to-primary/5 dark:from-background-dark dark:to-slate-900">
         <div className="max-w-[1320px] mx-auto px-6 flex flex-col lg:flex-row items-center justify-between gap-12">
           <div className="max-w-2xl">
             <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-4">Partner With Us for CSR Initiatives</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-lg">
-              Align your corporate social responsibility goals with our impactful on-ground projects. Let's create measurable social change together.
+            <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+              Align your corporate social responsibility goals with our impactful on-ground projects. Let's create measurable social change together in the tech and digital inclusion sectors.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
-            <button className="bg-primary text-white px-8 py-4 rounded-xl font-bold flex items-center gap-2 hover:opacity-90 transition-all">
-              <span className="material-symbols-outlined">description</span>
+            <a href={`mailto:${contactInfo.email}`} className="bg-primary text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 hover:-translate-y-1 transition-all shadow-lg shadow-primary/30">
+              <FileText size={20} />
               Get CSR Proposal
-            </button>
-            <Link to="/contact" className="border-2 border-primary text-primary px-8 py-4 rounded-xl font-bold hover:bg-primary/5 transition-colors text-center">
+            </a>
+            <Link to="/contact" className="border-2 border-primary text-primary dark:text-white dark:border-slate-600 px-8 py-4 rounded-xl font-bold hover:bg-primary hover:text-white transition-all text-center hover:-translate-y-1">
               Contact Partnerships
             </Link>
           </div>
         </div>
       </section>
+
 
     </div>
   );

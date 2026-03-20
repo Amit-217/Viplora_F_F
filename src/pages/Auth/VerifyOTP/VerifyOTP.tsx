@@ -4,6 +4,7 @@ import { useAuth } from '../../../context/AuthContext';
 import api from '../../../services/api';
 import { motion } from 'framer-motion';
 import { ShieldCheck, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const VerifyOTP = () => {
   const [otp, setOtp] = useState('');
@@ -30,6 +31,21 @@ const VerifyOTP = () => {
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Verification failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email) return;
+    setLoading(true);
+    setError('');
+    try {
+      const response = await api.post('/auth/resend-otp', { email });
+      toast.success(response.data.message || 'OTP resent successfully!');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to resend OTP');
+      toast.error(err.response?.data?.message || 'Failed to resend OTP');
     } finally {
       setLoading(false);
     }
@@ -79,7 +95,15 @@ const VerifyOTP = () => {
         </form>
 
         <p className="mt-8 text-gray-500 text-sm">
-          Didn't receive code? <button className="text-primary font-bold hover:underline">Resend Code</button>
+          Didn't receive code? 
+          <button 
+            type="button" 
+            onClick={handleResend}
+            disabled={loading}
+            className="text-primary font-bold hover:underline ml-1 disabled:opacity-50"
+          >
+            {loading ? 'Sending...' : 'Resend Code'}
+          </button>
         </p>
       </motion.div>
     </div>

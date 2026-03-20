@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ImageIcon, Loader2 } from 'lucide-react';
+import { resolveImageUrl, handleImgError } from '../../utils/imageUrl';
 
 const categories = ['All', 'Events', 'Programs', 'Impact', 'Volunteers'];
 
@@ -79,7 +80,12 @@ const GalleryGrid = () => {
                   className="break-inside-avoid"
                 >
                   <div className="group relative rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all border border-gray-100">
-                    <img src={item.image} alt={item.title} className="w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <img 
+                      src={resolveImageUrl(item.image)} 
+                      onError={handleImgError}
+                      alt={item.title} 
+                      className="w-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-8 flex flex-col justify-end">
                       <p className="text-white font-bold text-xl mb-1">{item.title}</p>
                       <p className="text-white/60 text-sm font-bold uppercase tracking-widest">{item.category}</p>

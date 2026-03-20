@@ -1,0 +1,2 @@
+﻿src/main.tsx(3,17): error TS5097: An import path can only end with a '.tsx' extension when 'allowImportingTsExtensions' is enabled.
+src/main.tsx(5,30): error TS5097: An import path can only end with a '.tsx' extension when 'allowImportingTsExtensions' is enabled.

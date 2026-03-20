@@ -4,6 +4,7 @@ import api from '../../../../services/api';
 import { motion } from 'framer-motion';
 import { User, Phone, Briefcase, Heart, Clock, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const VolunteerApply = () => {
   const { register, handleSubmit, formState: { errors } } = useForm();
@@ -15,12 +16,16 @@ const VolunteerApply = () => {
   const onSubmit = async (data: any) => {
     setLoading(true);
     setError('');
+    const toastId = toast.loading('Submitting your application...');
     try {
       await api.post('/volunteer/apply', data);
       setSuccess(true);
+      toast.success('Application submitted successfully!', { id: toastId });
       setTimeout(() => navigate('/dashboard'), 3000);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Application failed');
+      const errMsg = err.response?.data?.message || 'Application failed';
+      setError(errMsg);
+      toast.error(errMsg, { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -48,9 +53,6 @@ const VolunteerApply = () => {
         {/* Left Info Column */}
         <div className="lg:col-span-2 space-y-12">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-            <div className="w-16 h-16 bg-primary text-white rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-primary/20">
-              <Sparkles size={32} />
-            </div>
             <h1 className="text-5xl font-extrabold text-gray-900 leading-tight mb-6">
               Be the Change <br/><span className="text-primary">You Wish to See</span>
             </h1>

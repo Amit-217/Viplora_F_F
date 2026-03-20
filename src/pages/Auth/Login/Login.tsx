@@ -17,7 +17,7 @@ const Login = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await api.post('/api/auth/login', data);
+      const response = await api.post('/auth/login', data);
       const { token, user } = response.data;
       login(token, user);
       
@@ -70,10 +70,7 @@ const Login = () => {
           </div>
 
           <div>
-            <div className="flex justify-between mb-2">
-              <label className="block text-sm font-bold text-gray-700">Password</label>
-              <Link to="/auth/forgot-password" size={20} className="text-xs font-bold text-primary hover:underline">Forgot?</Link>
-            </div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Password</label>
             <div className="relative">
               <Lock className="absolute left-4 top-3.5 text-gray-400" size={20} />
               <input
@@ -84,6 +81,10 @@ const Login = () => {
               />
             </div>
             {errors.password && <p className="text-red-500 text-xs mt-1">Password is required</p>}
+          </div>
+
+          <div className="flex justify-end -mt-2">
+            <Link to="/auth/forgot-password" className="text-sm font-bold text-primary hover:text-secondary hover:underline transition-all">Forgot password?</Link>
           </div>
 
           <button

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../../../../services/api';
 import { motion } from 'framer-motion';
 import { Heart, Target, Users, Share2, Calendar, MapPin, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { resolveImageUrl, handleImgError } from '../../../../utils/imageUrl';
 
 const ProgramDetails = () => {
   const { id } = useParams();
@@ -33,7 +34,12 @@ const ProgramDetails = () => {
       {/* Immersive Hero Section */}
       <section className="relative h-[70vh] flex items-end">
         <div className="absolute inset-0">
-          <img src={program.image} alt={program.title} className="w-full h-full object-cover" />
+          <img 
+            src={resolveImageUrl(program.image)} 
+            onError={handleImgError}
+            alt={program.title} 
+            className="w-full h-full object-cover" 
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 pb-20 w-full">
@@ -79,7 +85,12 @@ const ProgramDetails = () => {
                 <h3 className="text-2xl font-bold text-gray-900 mb-8">Campaign Gallery</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {program.gallery.map((img: string, i: number) => (
-                    <img key={i} src={img} className="rounded-3xl h-48 w-full object-cover hover:scale-105 transition-transform" />
+                    <img 
+                      key={i} 
+                      src={resolveImageUrl(img)} 
+                      onError={handleImgError}
+                      className="rounded-3xl h-48 w-full object-cover hover:scale-105 transition-transform" 
+                    />
                   ))}
                 </div>
               </div>

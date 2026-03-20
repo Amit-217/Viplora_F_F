@@ -57,10 +57,10 @@ const ManageVolunteers = () => {
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-accent text-primary rounded-2xl flex items-center justify-center font-bold">
-                        {app.fullName.charAt(0)}
+                        {app.fullName?.charAt(0) || 'V'}
                       </div>
                       <div>
-                        <h4 className="font-bold text-gray-900 text-lg">{app.fullName}</h4>
+                        <h4 className="font-bold text-gray-900 text-lg">{app.fullName || 'Anonymous Volunteer'}</h4>
                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
                           app.status === 'approved' ? 'bg-green-100 text-green-600' : 
                           app.status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'

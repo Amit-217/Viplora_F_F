@@ -4,6 +4,7 @@ import api from '../../services/api';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Image as ImageIcon, Loader2, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { resolveImageUrl, handleImgError } from '../../utils/imageUrl';
 
 const ManageGallery = () => {
   const [items, setItems] = useState([]);
@@ -11,6 +12,7 @@ const ManageGallery = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { register, handleSubmit, reset } = useForm();
   const [formLoading, setFormLoading] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
     fetchGallery();
@@ -28,11 +30,23 @@ const ManageGallery = () => {
   };
 
   const onSubmit = async (data: any) => {
+    if (!file) {
+      alert("Please select an image file to upload");
+      return;
+    }
     setFormLoading(true);
     try {
-      await api.post('/gallery', data);
+      const formData = new FormData();
+      formData.append('title', data.title);
+      formData.append('category', data.category);
+      formData.append('image', file);
+
+      await api.post('/gallery', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       setIsModalOpen(false);
       reset();
+      setFile(null);
       fetchGallery();
     } catch (err) {
       console.error(err);
@@ -76,7 +90,12 @@ const ManageGallery = () => {
                 whileHover={{ scale: 1.02 }}
                 className="group relative bg-white rounded-[2rem] overflow-hidden shadow-sm aspect-square border border-gray-100"
               >
-                <img src={item.image} className="w-full h-full object-cover" alt="" />
+                <img 
+                  src={resolveImageUrl(item.image)} 
+                  onError={handleImgError}
+                  className="w-full h-full object-cover" 
+                  alt="" 
+                />
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                   <button onClick={() => handleDelete(item._id)} className="p-4 bg-red-500 text-white rounded-2xl shadow-xl hover:scale-110 transition-all">
                     <Trash2 size={24} />
@@ -118,8 +137,8 @@ const ManageGallery = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Image URL</label>
-                <input {...register('image', { required: true })} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" placeholder="https://..." />
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Upload Image</label>
+                <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" required />
               </div>
               <button type="submit" disabled={formLoading} className="w-full btn-primary py-5 text-lg">
                 {formLoading ? 'Uploading...' : 'Upload to Gallery'}

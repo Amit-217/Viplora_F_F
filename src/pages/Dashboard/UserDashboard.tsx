@@ -9,10 +9,6 @@ const UserDashboard = () => {
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchDonations();
-  }, []);
-
   const fetchDonations = async () => {
     try {
       const { data } = await api.get('/donations/user');
@@ -23,6 +19,12 @@ const UserDashboard = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchDonations();
+  }, []);
+
+  const totalContribution = donations.reduce((sum: number, donation: any) => sum + (donation.amount || 0), 0);
 
   return (
     <div className="min-h-screen pt-32 pb-20 bg-gray-50">
@@ -48,7 +50,7 @@ const UserDashboard = () => {
           <div className="lg:col-span-1 space-y-8">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-primary p-8 rounded-[3rem] text-white shadow-xl shadow-primary/20">
               <Heart className="mb-6 text-secondary" fill="currentColor" size={32} />
-              <h3 className="text-4xl font-black mb-2">₹12,500</h3>
+              <h3 className="text-4xl font-black mb-2">₹{totalContribution.toLocaleString()}</h3>
               <p className="opacity-80 font-medium">Total Contribution</p>
             </motion.div>
             
@@ -90,11 +92,13 @@ const UserDashboard = () => {
                   <tbody className="divide-y divide-gray-50">
                     {donations.length > 0 ? donations.map((donation: any) => (
                       <tr key={donation._id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-8 py-6 font-bold text-gray-900">Education Fund</td>
-                        <td className="px-8 py-6 text-gray-500 text-sm">Mar 15, 2026</td>
-                        <td className="px-8 py-6 font-bold text-primary">₹5,000</td>
+                        <td className="px-8 py-6 font-bold text-gray-900">{donation.programId?.title || 'General Fund'}</td>
+                        <td className="px-8 py-6 text-gray-500 text-sm">
+                          {new Date(donation.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </td>
+                        <td className="px-8 py-6 font-bold text-primary">₹{donation.amount.toLocaleString()}</td>
                         <td className="px-8 py-6 text-right">
-                          <button className="text-primary hover:bg-primary/10 p-2 rounded-lg transition-all">
+                          <button className="text-primary hover:bg-primary/10 p-2 rounded-lg transition-all" title="Download Receipt">
                             <Download size={18} />
                           </button>
                         </td>

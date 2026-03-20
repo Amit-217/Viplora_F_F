@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../../../services/api';
 import { motion } from 'framer-motion';
 import { Calendar, User, ArrowLeft, Share2, Facebook, Twitter, Linkedin, Loader2 } from 'lucide-react';
+import { resolveImageUrl, handleImgError } from '../../../utils/imageUrl';
 
 const BlogSingle = () => {
   const { id } = useParams();
@@ -30,7 +31,12 @@ const BlogSingle = () => {
     <div className="min-h-screen bg-white">
       {/* Header Image */}
       <section className="relative h-[60vh]">
-        <img src={blog.image} className="w-full h-full object-cover" alt={blog.title} />
+        <img 
+          src={resolveImageUrl(blog.image)} 
+          onError={handleImgError}
+          className="w-full h-full object-cover" 
+          alt={blog.title} 
+        />
         <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="max-w-4xl px-4 text-center">
