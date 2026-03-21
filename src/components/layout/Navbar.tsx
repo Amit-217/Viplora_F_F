@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Heart, ChevronDown, Home, Info, Layers, HandHeart, FileText, Images, Phone, LogIn, UserPlus } from 'lucide-react';
+import { Menu, X, Heart, ChevronDown, Home, Info, Layers, HandHeart, FileText, Images, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
@@ -52,9 +52,6 @@ const Navbar = () => {
     { name: 'Gallery', path: '/gallery', icon: Images },
     // Use internal SPA route so dev server localhost and production both work
     { name: 'Contact', path: '/contact', icon: Phone },
-    { name: 'Donate', path: '/donate', icon: Heart },
-    { name: 'Login', path: '/auth/login', icon: LogIn },
-    { name: 'Register', path: '/auth/register', icon: UserPlus },
   ];
 
   return (
@@ -148,9 +145,6 @@ const Navbar = () => {
 
           {/* Mobile Menu Toggle (Visible on lg and below) */}
           <div className="xl:hidden flex items-center gap-4">
-            <Link to="/donate" className="sm:hidden bg-secondary p-3 rounded-xl text-white shadow-lg">
-              <Heart size={20} fill="currentColor" />
-            </Link>
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)} 
               className={`p-3 rounded-2xl transition-all bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 backdrop-blur-md`}
@@ -255,6 +249,20 @@ const Navbar = () => {
                     )}
                   </div>
                 ))}
+              </div>
+              <div className="border-t border-slate-100 p-6 grid grid-cols-2 gap-3 bg-white">
+                <Link
+                  to="/auth/login"
+                  className="text-center font-bold text-sm uppercase tracking-widest px-4 py-3 rounded-2xl transition-all text-slate-800 border border-slate-200 hover:bg-slate-50"
+                >
+                  Portal
+                </Link>
+                <Link
+                  to="/donate"
+                  className="text-center bg-secondary text-white px-4 py-3 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-secondary/30"
+                >
+                  Donate Now
+                </Link>
               </div>
             </motion.div>
           </>
