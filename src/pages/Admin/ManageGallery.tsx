@@ -6,21 +6,26 @@ import { Plus, Trash2, Image as ImageIcon, Loader2, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { resolveImageUrl, handleImgError } from '../../utils/imageUrl';
 
+const categories = ['All', 'Events', 'Programs', 'Impact', 'Volunteers'];
+
 const ManageGallery = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { register, handleSubmit, reset } = useForm();
   const [formLoading, setFormLoading] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<FileList | null>(null);
 
   useEffect(() => {
     fetchGallery();
-  }, []);
+  }, [activeTab]);
 
   const fetchGallery = async () => {
+    setLoading(true);
     try {
-      const { data } = await api.get('/gallery');
+      const query = activeTab === 'All' ? '' : `?category=${activeTab.toLowerCase()}`;
+      const { data } = await api.get(`/gallery${query}`);
       setItems(data);
     } catch (err) {
       console.error(err);
@@ -30,8 +35,8 @@ const ManageGallery = () => {
   };
 
   const onSubmit = async (data: any) => {
-    if (!file) {
-      alert("Please select an image file to upload");
+    if (!files || files.length === 0) {
+      alert("Please select at least one image file to upload");
       return;
     }
     setFormLoading(true);
@@ -39,14 +44,18 @@ const ManageGallery = () => {
       const formData = new FormData();
       formData.append('title', data.title);
       formData.append('category', data.category);
-      formData.append('image', file);
+      if (files) {
+        Array.from(files).forEach(f => {
+          formData.append('images', f); // Backend expects 'images' array
+        });
+      }
 
       await api.post('/gallery', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setIsModalOpen(false);
       reset();
-      setFile(null);
+      setFiles(null);
       fetchGallery();
     } catch (err) {
       console.error(err);
@@ -79,6 +88,23 @@ const ManageGallery = () => {
             <Plus size={20} /> Add Image
           </button>
         </header>
+
+        {/* Category Tabs */}
+        <div className="flex flex-wrap gap-2 mb-8">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveTab(cat)}
+              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                activeTab === cat 
+                  ? 'bg-primary text-white shadow-lg shadow-primary/10 scale-105' 
+                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-100/10 shadow-sm'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
 
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" size={48} /></div>
@@ -131,14 +157,21 @@ const ManageGallery = () => {
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Category</label>
                 <select {...register('category', { required: true })} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20 bg-white">
-                  {['events', 'programs', 'impact', 'volunteers'].map(cat => (
-                    <option key={cat} value={cat}>{cat.toUpperCase()}</option>
+                  {categories.filter(c => c !== 'All').map(cat => (
+                    <option key={cat} value={cat.toLowerCase()}>{cat.toUpperCase()}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Upload Image</label>
-                <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" required />
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Upload Images</label>
+                <input type="file" accept="image/*" multiple onChange={(e) => setFiles(e.target.files)} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" required />
+                {files && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {Array.from(files).map((f, i) => (
+                      <span key={i} className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full">{f.name}</span>
+                    ))}
+                  </div>
+                )}
               </div>
               <button type="submit" disabled={formLoading} className="w-full btn-primary py-5 text-lg">
                 {formLoading ? 'Uploading...' : 'Upload to Gallery'}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FolderHeart, Users, CreditCard, BookOpen, Image as ImageIcon, Settings, LogOut, Menu, X, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, FolderHeart, Users, CreditCard, BookOpen, Image as ImageIcon, Settings, LogOut, Menu, X, ChevronRight, CheckSquare } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -17,6 +17,8 @@ const AdminSidebar = () => {
     { name: 'Donations', path: '/admin/donations', icon: CreditCard },
     { name: 'Blog', path: '/admin/blog', icon: BookOpen },
     { name: 'Gallery', path: '/admin/gallery', icon: ImageIcon },
+    { name: 'Messages', path: '/admin/messages', icon: Settings },
+    { name: 'Activities', path: '/admin/activities', icon: CheckSquare },
     { name: 'Admins', path: '/admin/manage-admins', icon: Settings },
   ];
 
@@ -56,22 +58,23 @@ const AdminSidebar = () => {
           {!isCollapsed && <span>Sign Out</span>}
         </button>
       </div>
-      
-      {/* Collapse button for desktop */}
-      <button 
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="hidden lg:flex absolute -right-3 top-10 w-6 h-6 bg-white border border-gray-100 rounded-full items-center justify-center shadow-md text-gray-500 hover:text-primary transition-colors z-10"
-      >
-        <ChevronRight size={14} className={`transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
-      </button>
     </div>
   );
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:block ${isCollapsed ? 'w-24' : 'w-72'} bg-white border-r border-gray-100 shadow-lg sticky top-0 h-screen transition-all duration-300 z-[110] shrink-0 overflow-y-auto`}>
-        <SidebarContent />
+      <aside className={`hidden lg:block ${isCollapsed ? 'w-24' : 'w-72'} bg-white border-r border-gray-100 shadow-lg sticky top-0 h-screen transition-all duration-300 z-[110] shrink-0 relative`}>
+        <div className="h-full overflow-y-auto">
+          <SidebarContent />
+        </div>
+        {/* Collapse button for desktop floating outside overflow clip */}
+        <button 
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="absolute -right-3 top-10 w-6 h-6 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-md text-gray-500 hover:text-primary transition-colors z-[120]"
+        >
+          <ChevronRight size={14} className={`transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
+        </button>
       </aside>
 
       {/* Mobile Header */}

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import api from '../../../../services/api';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { User, Phone, Briefcase, Heart, Clock, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const VolunteerApply = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -20,8 +20,8 @@ const VolunteerApply = () => {
     try {
       await api.post('/volunteer/apply', data);
       setSuccess(true);
+      reset(); // Reset form fields so candidate can apply again/fresh
       toast.success('Application submitted successfully!', { id: toastId });
-      setTimeout(() => navigate('/dashboard'), 3000);
     } catch (err: any) {
       const errMsg = err.response?.data?.message || 'Application failed';
       setError(errMsg);
@@ -31,20 +31,7 @@ const VolunteerApply = () => {
     }
   };
 
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-accent px-4">
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="max-w-md w-full bg-white p-12 rounded-[3rem] text-center shadow-xl">
-          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={48} />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Application Sent!</h2>
-          <p className="text-gray-600 mb-8">Thank you for your interest. Our team will review your application and get back to you shortly.</p>
-          <div className="text-sm text-primary font-bold animate-pulse">Redirecting to dashboard...</div>
-        </motion.div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen pt-32 pb-20 bg-accent">
@@ -181,6 +168,16 @@ const VolunteerApply = () => {
               </select>
             </div>
 
+            {/* Motivation / Reason */}
+            <div className="flex flex-col w-full">
+              <p className="text-slate-900 dark:text-slate-100 text-sm font-bold pb-2 uppercase tracking-wider">Motivation / Reason</p>
+              <textarea 
+                {...register('reason', { required: true })}
+                className="w-full rounded-xl text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 border border-primary/10 bg-white dark:bg-slate-800/50 min-h-[120px] p-4 text-sm resize-none" 
+                placeholder="Why do you want to join us? What inspires you?"
+              />
+            </div>
+
             {/* Submit Button form Footer from Spec */}
             <div className="pt-4">
               <button
@@ -195,6 +192,34 @@ const VolunteerApply = () => {
           </motion.form>
         </div>
       </div>
+
+      {/* Success Modal popup */}
+      <AnimatePresence>
+        {success && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="max-w-md w-full bg-white p-8 rounded-3xl text-center shadow-2xl flex flex-col items-center"
+            >
+              <div className="w-16 h-16 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mb-5 animate-bounce">
+                <CheckCircle size={32} />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Application Sent!</h2>
+              <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+                Thank you for your interest. Our team will review your application and get back to you shortly.
+              </p>
+              <button 
+                onClick={() => setSuccess(false)}
+                className="w-full py-3 bg-primary hover:opacity-90 text-white font-bold rounded-xl shadow-lg shadow-primary/10 transition-all flex items-center justify-center gap-2"
+              >
+                Close
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

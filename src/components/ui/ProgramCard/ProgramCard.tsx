@@ -12,86 +12,106 @@ interface ProgramCardProps {
     shortDescription: string;
     image: string;
     category: string;
-    goalAmount: number;
-    raisedAmount: number;
+    type?: 'event' | 'fundraiser' | 'announcement';
+    goalAmount?: number;
+    raisedAmount?: number;
+    date?: string;
+    location?: string;
+    targetDate?: string;
   };
 }
 
 const ProgramCard: React.FC<ProgramCardProps> = ({ program }) => {
-  const progress = Math.min(Math.round((program.raisedAmount / program.goalAmount) * 100), 100);
+  const progress = program.goalAmount && program.raisedAmount 
+    ? Math.min(Math.round((program.raisedAmount / program.goalAmount) * 100), 100) 
+    : 0;
 
   return (
     <motion.div 
-      whileHover={{ y: -5 }}
-      className="bg-white dark:bg-primary/10 rounded-2xl lg:rounded-[3rem] p-4 lg:p-0 flex flex-row lg:flex-col items-center lg:items-stretch gap-4 lg:gap-0 border border-slate-100 dark:border-primary/20 shadow-sm hover:shadow-md transition-all h-auto lg:h-full group"
+      whileHover={{ y: -8 }}
+      className="bg-white dark:bg-slate-800 rounded-2xl md:rounded-3xl overflow-hidden flex flex-col items-stretch border border-gray-100 dark:border-slate-700 shadow-xl shadow-gray-400/5 hover:shadow-gray-400/10 hover:border-primary/20 h-full group transition-all duration-300"
     >
       {/* Image Section */}
-      <div className="relative h-20 w-20 lg:h-72 lg:w-full shrink-0 overflow-hidden rounded-xl lg:rounded-none">
+      <div className="relative h-56 md:h-60 w-full shrink-0 overflow-hidden">
         <img 
           src={resolveImageUrl(program.image)} 
           onError={handleImgError}
           alt={program.title} 
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
-        <div className="absolute top-2 left-2 lg:top-6 lg:left-6">
-          <span className="bg-white/90 backdrop-blur-md text-primary px-3 py-1 lg:px-5 lg:py-2 rounded-xl lg:rounded-2xl text-[8px] lg:text-xs font-black uppercase tracking-wider shadow-sm">
+        <div className="absolute top-4 left-4 lg:top-6 lg:left-6">
+          <span className="bg-white/90 backdrop-blur-md text-primary px-4 py-1.5 lg:px-5 lg:py-2 rounded-xl lg:rounded-2xl text-xs lg:text-xs font-black uppercase tracking-wider shadow-sm">
             {program.category}
           </span>
         </div>
       </div>
 
       {/* Content Section */}
-      <div className="flex flex-1 flex-col lg:p-8 lg:p-10 lg:flex-grow">
-        <h3 className="text-base lg:text-2xl font-bold lg:font-black text-slate-900 dark:text-slate-100 mb-1 lg:mb-4 line-clamp-1 leading-tight">
+      <div className="flex flex-1 flex-col p-5 lg:p-6">
+        <h3 className="text-xl lg:text-xl font-extrabold text-gray-900 dark:text-white mb-2 line-clamp-1 leading-tight group-hover:text-primary transition-colors">
           {program.title}
         </h3>
-        <p className="text-slate-500 dark:text-slate-400 mb-0 lg:mb-8 line-clamp-2 text-xs lg:text-base leading-snug lg:leading-relaxed">
+        <p className="text-slate-500 dark:text-slate-400 mb-4 line-clamp-2 text-sm leading-normal">
           {program.shortDescription}
         </p>
 
-        {/* Progress Bar - Hidden on Mobile to match spec list */}
-        <div className="hidden lg:block mb-8 space-y-4">
-          <div className="flex justify-between items-end">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Raised</span>
-              <span className="text-primary text-2xl font-black flex items-center gap-1">
-                ₹{program.raisedAmount.toLocaleString()}
-              </span>
+        {/* Progress Bar */}
+        {(!program.type || program.type === 'fundraiser') && (
+          <div className="block mb-6 space-y-3">
+            <div className="flex justify-between items-end">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Raised</span>
+                <span className="text-primary text-2xl font-black flex items-center gap-1">
+                  ₹{program.raisedAmount?.toLocaleString() || '0'}
+                </span>
+              </div>
+              {program.goalAmount && (
+                <div className="flex flex-col items-end">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Goal</span>
+                  <span className="text-gray-900 font-bold text-base">₹{program.goalAmount.toLocaleString()}</span>
+                </div>
+              )}
             </div>
-            <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Goal</span>
-              <span className="text-gray-900 font-bold text-base">₹{program.goalAmount.toLocaleString()}</span>
+            <div className="w-full h-3.5 bg-gray-100 rounded-full overflow-hidden p-1">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                whileInView={{ width: `${progress}%` }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                className="h-full bg-gradient-to-r from-primary to-green-400 rounded-full"
+              />
             </div>
           </div>
-          <div className="w-full h-3.5 bg-gray-100 rounded-full overflow-hidden p-1">
-            <motion.div 
-              initial={{ width: 0 }}
-              whileInView={{ width: `${progress}%` }}
-              transition={{ duration: 1.5, ease: "easeOut" }}
-              className="h-full bg-gradient-to-r from-primary to-green-400 rounded-full"
-            />
-          </div>
-        </div>
+        )}
 
-        {/* Footer Actions / Chevron */}
-        <div className="hidden lg:flex mt-auto pt-6 border-t border-gray-50 items-center justify-between gap-4">
+        {(program.type === 'event' || program.type === 'announcement') && (
+          <div className="block mb-8 space-y-2">
+            {program.date && (
+              <div className="flex items-center gap-2 text-sm text-gray-600 font-medium">
+                <span className="text-primary font-bold">Date:</span> {new Date(program.date).toLocaleDateString('en-IN')}
+              </div>
+            )}
+            {program.location && (
+              <div className="flex items-center gap-2 text-sm text-gray-600 font-medium">
+                <span className="text-primary font-bold">Location:</span> {program.location}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Footer Actions */}
+        <div className="flex mt-auto pt-5 border-t border-gray-100 items-center justify-between gap-4">
           <Link 
             to={`/programs/${program.slug}`}
-            className="text-gray-900 font-black text-sm uppercase tracking-widest flex items-center gap-2 hover:text-primary transition-all group/link"
+            className="text-gray-900 dark:text-white font-black text-sm uppercase tracking-widest flex items-center gap-2 hover:text-primary transition-all group/link"
           >
             Explore <ChevronRight size={18} className="group-hover/link:translate-x-1 transition-transform" />
           </Link>
           <Link 
             to={`/donate?program=${program._id}`}
-            className="bg-primary text-white p-4 rounded-2xl hover:opacity-90 transition-all shadow-xl"
+            className="bg-primary text-white p-3 lg:p-4 rounded-xl lg:rounded-2xl hover:opacity-90 transition-all shadow-xl"
           >
-            <Heart size={20} fill="currentColor" />
+            <Heart size={18} fill="currentColor" />
           </Link>
-        </div>
-
-        {/* Mobile Chevron */}
-        <div className="lg:hidden flex items-center text-slate-300">
-          <ChevronRight size={20} />
         </div>
       </div>
     </motion.div>

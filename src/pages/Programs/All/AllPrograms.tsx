@@ -106,7 +106,7 @@ const AllPrograms = () => {
         ) : (
           <AnimatePresence mode="popLayout">
             {displayedPrograms.length > 0 ? (
-              <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 items-start">
                 {displayedPrograms.map((program: any, i) => (
                   <motion.div
                     key={program._id}

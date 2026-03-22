@@ -7,9 +7,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#0e3d3e", // Dark Teal (NGO vibe from design)
-        secondary: "#FF9F1C", // Keeping secondary for accent
-        "background-light": "#f6f8f8",
+        primary: "#1B4332", // Trust Green
+        secondary: "#FB8500", // Action Orange
+        accent: "#95D5B2", // Soft Leaf
+        "background-light": "#F8F9FA", // Off-white
         "background-dark": "#131f1f",
       },
     },

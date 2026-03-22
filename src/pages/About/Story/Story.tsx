@@ -54,29 +54,29 @@ const Story = () => {
         </div>
 
         <div className="relative">
-          <div className="absolute left-1/2 -translate-x-1/2 w-1 h-full bg-slate-200 dark:bg-slate-800 rounded-full" />
+          <div className="absolute left-4 md:left-1/2 -translate-x-1/2 w-1 h-full bg-slate-200 dark:bg-slate-800 rounded-full" />
           
-          <div className="space-y-16 mt-12">
+          <div className="space-y-8 md:space-y-16 mt-12">
             {milestones.map((m, i) => (
               <motion.div 
                 key={i}
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className={`flex items-center w-full ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}
+                className={`flex items-center w-full justify-start ${i % 2 === 0 ? 'md:justify-start' : 'md:justify-end'}`}
               >
-                <div className={`w-[45%] ${i % 2 === 0 ? 'text-right pr-12' : 'text-left pl-12'}`}>
-                  <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 relative group hover:-translate-y-2 transition-transform">
-                    <span className="text-4xl font-black text-primary/20 absolute top-4 right-4">{m.year}</span>
-                    <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4 ml-auto data-[left=true]:mr-auto data-[left=true]:ml-0" data-left={i % 2 !== 0}>
+                <div className={`w-full md:w-[45%] ${i % 2 === 0 ? 'md:text-right md:pr-12 md:pl-0' : 'md:text-left md:pl-12 md:pr-0'} pl-12 pr-4`}>
+                  <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 relative group hover:-translate-y-2 transition-transform">
+                    <span className={`text-3xl md:text-4xl font-black text-primary/20 absolute top-4 ${i % 2 === 0 ? 'right-4 md:left-4 md:right-auto' : 'right-4'}`}>{m.year}</span>
+                    <div className={`w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4 ${i % 2 === 0 ? 'md:ml-auto md:mr-0' : 'md:mr-auto md:ml-0'} ml-0 mr-auto`}>
                       <m.icon size={24} />
                     </div>
-                    <h3 className="text-2xl font-bold mb-3 dark:text-white">{m.title}</h3>
-                    <p className="text-slate-600 dark:text-slate-400">{m.desc}</p>
+                    <h3 className="text-xl md:text-2xl font-bold mb-3 dark:text-white">{m.title}</h3>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm md:text-base">{m.desc}</p>
                   </div>
                 </div>
                 
-                <div className="absolute left-1/2 -translate-x-1/2 w-6 h-6 bg-primary rounded-full border-4 border-white dark:border-slate-900 shadow-md z-10" />
+                <div className="absolute left-4 md:left-1/2 -translate-x-1/2 w-6 h-6 bg-primary rounded-full border-4 border-white dark:border-slate-900 shadow-md z-10" />
               </motion.div>
             ))}
           </div>

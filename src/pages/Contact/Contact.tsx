@@ -56,21 +56,21 @@ const Contact = () => {
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           
           {/* Contact Info Sidebar */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }} 
             animate={{ opacity: 1, x: 0 }} 
             transition={{ delay: 0.3 }}
-            className="lg:col-span-5 bg-gradient-to-br from-primary to-emerald-600 dark:from-slate-800 dark:to-slate-900 p-8 sm:p-10 md:p-12 rounded-[2.5rem] text-white shadow-2xl shadow-primary/20 relative overflow-hidden"
+            className="lg:col-span-5 bg-gradient-to-br from-primary to-emerald-600 dark:from-slate-800 dark:to-slate-900 p-8 sm:p-10 md:p-12 rounded-[2.5rem] text-white shadow-2xl shadow-primary/20 relative overflow-hidden h-full flex flex-col"
           >
             {/* abstract shape */}
             <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-12 -translate-y-12">
                <MessageSquare size={200} />
             </div>
             
-            <div className="relative z-10 h-full flex flex-col justify-between space-y-12">
+            <div className="relative z-10 h-full flex flex-col justify-start space-y-12">
               <div>
                 <h3 className="text-3xl font-bold mb-2">Contact Information</h3>
                 <p className="text-white/80 text-lg">Reach out directly through our real-time channels.</p>
@@ -125,14 +125,7 @@ const Contact = () => {
                   </div>
                 </div>
 
-                <a
-                  href={contactInfo.contactUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/15 hover:bg-white/25 font-bold uppercase tracking-widest text-sm backdrop-blur-md transition-all w-fit"
-                >
-                  Open Contact Page <ArrowUpRight size={16} />
-                </a>
+
               </div>
             </div>
           </motion.div>
@@ -142,7 +135,7 @@ const Contact = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="lg:col-span-7 bg-white dark:bg-slate-800 p-8 md:p-12 rounded-[2.5rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700 relative"
+            className="lg:col-span-7 bg-white dark:bg-slate-800 p-8 md:p-12 rounded-[2.5rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700 relative h-full flex flex-col"
           >
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="mb-8">
@@ -215,7 +208,7 @@ const Contact = () => {
                   <textarea 
                     {...register('message', { required: true })} 
                     rows={5} 
-                    className="w-full px-5 py-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 dark:text-white resize-none font-medium" 
+                    className="w-full pl-12 pr-5 py-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 dark:text-white resize-none font-medium" 
                     placeholder="Tell us what's on your mind..." 
                   />
                 </div>
@@ -235,6 +228,24 @@ const Contact = () => {
           </motion.div>
 
         </div>
+
+        {/* Google Map Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-16 rounded-[2.5rem] overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 h-[450px] relative z-10"
+        >
+          <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3785.432644264627!2d76.51608677465337!3d18.407956843399037!2m3!1f0!2f0!3f0!3m2!1i1024!2i1024!8f13.1!3m3!1m2!1s0x3bcf83a30a8ed109%3A0xe5a363d664164b4c!2sMogarga%2C%20Maharashtra%20413511!5e0!3m2!1sen!2sin!4v1711132800000!5m2!1sen!2sin" 
+            width="100%" 
+            height="100%" 
+            style={{ border: 0 }} 
+            allowFullScreen={true} 
+            loading="lazy" 
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        </motion.div>
 
         {/* Core Values Section */}
         <div className="mt-24 pt-20 border-t border-slate-200 dark:border-slate-800 relative z-10">

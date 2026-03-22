@@ -73,6 +73,24 @@ const BlogSingle = () => {
               className="prose prose-xl prose-primary max-w-none text-gray-700 leading-relaxed font-serif"
               dangerouslySetInnerHTML={{ __html: blog.content.replace(/\n/g, '<br />') }}
             />
+
+            {blog.images && blog.images.length > 1 && (
+              <div className="mt-16 pt-10 border-t border-gray-100">
+                <h3 className="text-2xl font-bold text-gray-900 mb-6 font-sans">More Pictures</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {blog.images.map((img: string, i: number) => (
+                    <div key={i} className="group relative rounded-2xl overflow-hidden aspect-video border border-gray-100 shadow-sm hover:shadow-lg transition-all">
+                      <img 
+                        src={resolveImageUrl(img)} 
+                        onError={handleImgError} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                        alt="" 
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
             <div className="mt-16 pt-10 border-t border-gray-100 flex flex-wrap gap-3">
               {blog.tags?.map((tag: string) => (

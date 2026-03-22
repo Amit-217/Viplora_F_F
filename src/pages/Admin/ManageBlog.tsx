@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit, Trash2, X, BookOpen, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { resolveImageUrl, handleImgError } from '../../utils/imageUrl';
+import { useAuth } from '../../context/AuthContext';
 
 const ManageBlog = () => {
   const [blogs, setBlogs] = useState([]);
@@ -13,6 +14,8 @@ const ManageBlog = () => {
   const [editingBlog, setEditingBlog] = useState<any>(null);
   const { register, handleSubmit, reset, setValue } = useForm();
   const [formLoading, setFormLoading] = useState(false);
+  const [files, setFiles] = useState<FileList | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchBlogs();
@@ -30,15 +33,34 @@ const ManageBlog = () => {
   };
 
   const onSubmit = async (data: any) => {
+    if (!files && !editingBlog) {
+      alert("Please select at least one image file to upload");
+      return;
+    }
     setFormLoading(true);
     try {
+      const formData = new FormData();
+      formData.append('title', data.title);
+      formData.append('category', data.category);
+      formData.append('excerpt', data.excerpt);
+      formData.append('content', data.content);
+      if (files) {
+        Array.from(files).forEach(f => {
+          formData.append('images', f);
+        });
+      }
+
+      const config = { headers: { 'Content-Type': 'multipart/form-data' } };
+
       if (editingBlog) {
-        await api.put(`/blog/${editingBlog._id}`, data);
+        if (!files) formData.append('image', editingBlog.image);
+        await api.put(`/blog/${editingBlog._id}`, formData, config);
       } else {
-        await api.post('/blog', data);
+        await api.post('/blog', formData, config);
       }
       setIsModalOpen(false);
       reset();
+      setFiles(null);
       setEditingBlog(null);
       fetchBlogs();
     } catch (err) {
@@ -84,7 +106,7 @@ const ManageBlog = () => {
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" size={48} /></div>
         ) : (
-          <div className="bg-white rounded-[3rem] shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-[3rem] shadow-sm border border-gray-100 overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100 text-gray-400 text-xs font-bold uppercase tracking-widest">
@@ -111,8 +133,12 @@ const ManageBlog = () => {
                     <td className="px-8 py-6 capitalize font-medium text-gray-600">{blog.category}</td>
                     <td className="px-8 py-6 text-sm text-gray-400">{new Date(blog.createdAt).toLocaleDateString()}</td>
                     <td className="px-8 py-6 text-right space-x-2">
-                      <button onClick={() => handleEdit(blog)} className="p-3 text-blue-500 hover:bg-blue-50 rounded-xl transition-all"><Edit size={18} /></button>
-                      <button onClick={() => handleDelete(blog._id)} className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={18} /></button>
+                      {user?.role === 'admin' && (
+                        <button onClick={() => handleEdit(blog)} className="p-3 text-blue-500 hover:bg-blue-50 rounded-xl transition-all"><Edit size={18} /></button>
+                      )}
+                      {(user?.role === 'admin' || blog.authorId === user?.id) && (
+                        <button onClick={() => handleDelete(blog._id)} className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={18} /></button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -121,52 +147,60 @@ const ManageBlog = () => {
           </div>
         )}
 
-        <AnimatePresence>
-          {isModalOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-white w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden max-h-[95vh] flex flex-col">
-                <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-primary text-white">
-                  <h2 className="text-2xl font-bold">{editingBlog ? 'Edit Story' : 'Write New Story'}</h2>
-                  <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-all"><X size={24} /></button>
-                </div>
-                <form onSubmit={handleSubmit(onSubmit)} className="p-10 space-y-8 overflow-y-auto">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-6">
+      </main>
+
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-white w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden max-h-[95vh] flex flex-col">
+              <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-primary text-white">
+                <h2 className="text-2xl font-bold">{editingBlog ? 'Edit Story' : 'Write New Story'}</h2>
+                <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-all"><X size={24} /></button>
+              </div>
+              <form onSubmit={handleSubmit(onSubmit)} className="p-10 space-y-8 overflow-y-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Title</label>
+                      <input {...register('title', { required: true })} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Title</label>
-                        <input {...register('title', { required: true })} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Category</label>
-                          <input {...register('category', { required: true })} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Image URL</label>
-                          <input {...register('image', { required: true })} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" />
-                        </div>
+                        <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Category</label>
+                        <input {...register('category', { required: true })} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" />
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Excerpt</label>
-                        <textarea {...register('excerpt', { required: true })} rows={3} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" placeholder="Short summary for the list page..." />
+                        <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Upload Images</label>
+                        <input type="file" accept="image/*" multiple onChange={(e) => setFiles(e.target.files)} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" required={!editingBlog} />
+                        {files && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {Array.from(files).map((f, i) => (
+                              <span key={i} className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full">{f.name}</span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Main Content (Markdown/HTML Support)</label>
-                      <textarea {...register('content', { required: true })} rows={12} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" placeholder="The heart of your story..." />
+                      <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Excerpt</label>
+                      <textarea {...register('excerpt', { required: true })} rows={3} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" placeholder="Short summary for the list page..." />
                     </div>
                   </div>
-                  <div className="flex justify-end gap-4">
-                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-4 rounded-2xl font-bold text-gray-500">Cancel</button>
-                    <button type="submit" disabled={formLoading} className="btn-primary px-12">{formLoading ? 'Saving...' : 'Publish Story'}</button>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Main Content (Markdown/HTML Support)</label>
+                    <textarea {...register('content', { required: true })} rows={12} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" placeholder="The heart of your story..." />
                   </div>
-                </form>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-      </main>
+                </div>
+                <div className="flex justify-end gap-4">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-4 rounded-2xl font-bold text-gray-500">Cancel</button>
+                  <button type="submit" disabled={formLoading} className="btn-primary px-12">{formLoading ? 'Saving...' : 'Publish Story'}</button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

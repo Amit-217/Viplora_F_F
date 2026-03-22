@@ -30,7 +30,7 @@ const ProgramDetails = () => {
   const progress = Math.min(Math.round((program.raisedAmount / program.goalAmount) * 100), 100);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pt-24">
       {/* Immersive Hero Section */}
       <section className="relative h-[70vh] flex items-end">
         <div className="absolute inset-0">
@@ -51,8 +51,15 @@ const ProgramDetails = () => {
               {program.title}
             </h1>
             <div className="flex flex-wrap gap-6 text-white/80 font-medium">
-              <span className="flex items-center gap-2"><MapPin size={18} className="text-secondary" /> Multiple Locations</span>
-              <span className="flex items-center gap-2"><Calendar size={18} className="text-secondary" /> Active Campaign</span>
+              {program.location && (
+                <span className="flex items-center gap-2"><MapPin size={18} className="text-secondary" /> {program.location}</span>
+              )}
+              {(program.type === 'event' || program.type === 'announcement') && program.date && (
+                <span className="flex items-center gap-2"><Calendar size={18} className="text-secondary" /> {new Date(program.date).toLocaleDateString('en-IN')}</span>
+              )}
+              {program.type === 'fundraiser' && program.targetDate && (
+                <span className="flex items-center gap-2"><Calendar size={18} className="text-secondary" /> Target: {new Date(program.targetDate).toLocaleDateString('en-IN')}</span>
+              )}
             </div>
           </motion.div>
         </div>
@@ -60,12 +67,15 @@ const ProgramDetails = () => {
 
       {/* Content & Sidebar Grid */}
       <section className="py-20 max-w-7xl mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 items-start">
           
           {/* Main Content */}
           <div className="lg:col-span-2">
             <div className="prose prose-lg max-w-none text-gray-600 leading-relaxed mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-6">About this program</h2>
+              {program.shortDescription && (
+                <p className="mb-4 text-xl font-medium text-gray-800">{program.shortDescription}</p>
+              )}
               <p className="mb-6">{program.description}</p>
               
               <h3 className="text-2xl font-bold text-gray-900 mt-10 mb-6">Why this matters</h3>
@@ -100,35 +110,37 @@ const ProgramDetails = () => {
           {/* Sidebar Donation Box */}
           <div className="lg:col-span-1">
             <div className="sticky top-32 space-y-8">
-              <div className="bg-white p-8 rounded-[3rem] shadow-2xl shadow-primary/10 border border-gray-50">
-                <h4 className="text-xl font-bold text-gray-900 mb-6">Support this cause</h4>
-                
-                {/* Progress Bar */}
-                <div className="mb-8 space-y-3">
-                  <div className="flex justify-between font-bold">
-                    <span className="text-primary text-2xl">₹{program.raisedAmount.toLocaleString()}</span>
-                    <span className="text-gray-400 self-end">of ₹{program.goalAmount.toLocaleString()}</span>
+              {(!program.type || program.type === 'fundraiser') && (
+                <div className="bg-white p-8 rounded-[3rem] shadow-2xl shadow-primary/10 border border-gray-50">
+                  <h4 className="text-xl font-bold text-gray-900 mb-6">Support this cause</h4>
+                  
+                  {/* Progress Bar */}
+                  <div className="mb-8 space-y-3">
+                    <div className="flex justify-between font-bold">
+                      <span className="text-primary text-2xl">₹{program.raisedAmount?.toLocaleString() || '0'}</span>
+                      <span className="text-gray-400 self-end">of ₹{program.goalAmount?.toLocaleString() || '0'}</span>
+                    </div>
+                    <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden">
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} className="h-full bg-primary rounded-full" />
+                    </div>
+                    <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-gray-400">
+                      <span>{progress}% Raised</span>
+                      <span>Campaign Ongoing</span>
+                    </div>
                   </div>
-                  <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} className="h-full bg-primary rounded-full" />
-                  </div>
-                  <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-gray-400">
-                    <span>{progress}% Raised</span>
-                    <span>Campaign Ongoing</span>
-                  </div>
+
+                  <Link 
+                    to={`/donate?program=${program._id}`}
+                    className="w-full btn-secondary py-5 flex items-center justify-center gap-2 text-lg shadow-xl shadow-secondary/20"
+                  >
+                    <Heart fill="currentColor" size={20} /> Donate Now
+                  </Link>
+
+                  <button className="w-full mt-4 bg-gray-50 text-gray-600 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-100 transition-all">
+                    <Share2 size={18} /> Share Campaign
+                  </button>
                 </div>
-
-                <Link 
-                  to={`/donate?program=${program._id}`}
-                  className="w-full btn-secondary py-5 flex items-center justify-center gap-2 text-lg shadow-xl shadow-secondary/20"
-                >
-                  <Heart fill="currentColor" size={20} /> Donate Now
-                </Link>
-
-                <button className="w-full mt-4 bg-gray-50 text-gray-600 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-100 transition-all">
-                  <Share2 size={18} /> Share Campaign
-                </button>
-              </div>
+              )}
 
               {/* Impact Card */}
               <div className="bg-accent p-8 rounded-[3rem] border border-primary/5">

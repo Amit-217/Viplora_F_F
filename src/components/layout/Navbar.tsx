@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Heart, ChevronDown, Home, Info, Layers, HandHeart, FileText, Images, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
 
 const Navbar = () => {
+  const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState<string | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const location = useLocation();
 
   // Close mobile menu on route change
@@ -22,7 +25,7 @@ const Navbar = () => {
     };
   }, [isMenuOpen]);
 
-  const navLinks = [
+  const baseLinks = [
     { name: 'Home', path: '/', icon: Home },
     { 
       name: 'About', 
@@ -35,27 +38,26 @@ const Navbar = () => {
         { name: 'Transparency', path: '/about/transparency' },
       ]
     },
-    { 
-      name: 'Programs', 
-      path: '/programs',
-      icon: Layers,
-      subLinks: [
-        { name: 'All Programs', path: '/programs' },
-        { name: 'Education', path: '/programs/education' },
-        { name: 'Food Security', path: '/programs/food' },
-        { name: 'Clean Water', path: '/programs/water' },
-        { name: 'Environment', path: '/programs/environment' },
-      ]
-    },
+    { name: 'Programs', path: '/programs', icon: Layers },
     { name: 'Volunteer', path: '/volunteer/apply', icon: HandHeart },
     { name: 'Blog', path: '/blog', icon: FileText },
     { name: 'Gallery', path: '/gallery', icon: Images },
-    // Use internal SPA route so dev server localhost and production both work
     { name: 'Contact', path: '/contact', icon: Phone },
   ];
 
+  const navLinks = [
+    ...baseLinks,
+    ...(user ? [
+      user.role === 'admin' 
+        ? { name: 'Admin', path: '/admin', icon: Layers } 
+        : user.role === 'volunteer' 
+          ? { name: 'Dashboard', path: '/volunteer/dashboard', icon: Layers } 
+          : { name: 'Dashboard', path: '/dashboard', icon: Layers }
+    ] : [])
+  ];
+
   return (
-    <nav className="fixed top-0 left-0 right-0 w-full z-[120] transition-all duration-300 bg-white/95 backdrop-blur-md shadow-2xl border-b border-slate-100 py-4">
+    <nav className="fixed top-0 left-0 right-0 w-full z-[120] transition-all duration-300 bg-white/70 backdrop-filter backdrop-blur-xl shadow-2xl border-b border-slate-200 py-4" style={{ backdropFilter: 'blur(12px)' }}>
       <div className="max-w-[1920px] mx-auto px-4 sm:px-8 lg:px-16">
         <div className="flex justify-between items-center">
           
@@ -86,24 +88,13 @@ const Navbar = () => {
                 onMouseEnter={() => link.subLinks && setActiveDropdown(link.name)}
                 onMouseLeave={() => setActiveDropdown(null)}
               >
-                {link.external ? (
-                  <a
-                    href={link.path}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-bold text-sm uppercase tracking-widest flex items-center gap-1.5 transition-all text-slate-800 dark:text-white hover:text-primary"
-                  >
-                    {link.name}
-                  </a>
-                ) : (
-                  <Link
-                    to={link.path}
-                    className={`font-bold text-sm uppercase tracking-widest flex items-center gap-1.5 transition-all text-slate-800 dark:text-white hover:text-primary`}
-                  >
-                    {link.name}
-                    {link.subLinks && <ChevronDown size={14} className={`transition-transform ${activeDropdown === link.name ? 'rotate-180' : ''}`} />}
-                  </Link>
-                )}
+                <Link
+                  to={link.path}
+                  className={`font-bold text-sm uppercase tracking-widest flex items-center gap-1.5 transition-all text-slate-800 dark:text-white hover:text-primary`}
+                >
+                  {link.name}
+                  {link.subLinks && <ChevronDown size={14} className={`transition-transform ${activeDropdown === link.name ? 'rotate-180' : ''}`} />}
+                </Link>
 
                 {/* Animated Dropdown */}
                 <AnimatePresence>
@@ -132,13 +123,63 @@ const Navbar = () => {
 
           {/* Action Buttons */}
           <div className="hidden lg:flex items-center gap-4">
-            <Link 
-              to="/auth/login" 
-              className={`font-bold text-sm uppercase tracking-widest px-6 py-2 rounded-full transition-all text-slate-800 dark:text-white border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800`}
-            >
-              Portal
-            </Link>
-            <Link to="/donate" className="bg-secondary text-white px-8 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-secondary/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+            {user ? (
+              <div className="relative">
+                <button 
+                  onClick={() => setIsProfileOpen(!isProfileOpen)} 
+                  className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 px-4 py-2 rounded-2xl transition-all border border-slate-100 shadow-sm"
+                >
+                  <div className="w-8 h-8 bg-primary text-white rounded-xl flex items-center justify-center text-sm font-black shadow-sm">
+                    {user.name.charAt(0)}
+                  </div>
+                  <span className="font-bold text-sm text-slate-800">{user.name.split(' ')[0]}</span>
+                  <ChevronDown size={14} className={`transition-transform text-slate-400 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {isProfileOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute top-full right-0 mt-3 w-64 bg-white shadow-2xl rounded-3xl p-5 border border-gray-100 overflow-hidden z-50 text-slate-900"
+                    >
+                      <div className="flex items-center gap-4 mb-4 pb-4 border-b border-gray-100">
+                        <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary font-black text-xl">
+                          {user.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-extrabold text-sm line-clamp-1">{user.name}</p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">ID: {user.id}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Link 
+                          to={user.role === 'admin' ? '/admin' : user.role === 'volunteer' ? '/volunteer/dashboard' : '/dashboard'} 
+                          onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-all"
+                        >
+                          <Layers size={16} /> My Dashboard
+                        </Link>
+                        <button 
+                          onClick={logout} 
+                          className="flex items-center gap-2 w-full p-2 hover:bg-red-50 rounded-xl text-sm font-bold text-red-600 transition-all"
+                        >
+                          <X size={16} /> Logout
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <Link 
+                to="/auth/login" 
+                className="btn-secondary font-bold text-sm uppercase tracking-widest"
+              >
+                Portal
+              </Link>
+            )}
+            <Link to="/donate" className="btn-primary font-black text-sm uppercase tracking-widest flex items-center gap-2">
               <Heart size={16} fill="currentColor" /> Donate Now
             </Link>
           </div>
@@ -188,24 +229,12 @@ const Navbar = () => {
               <div className="flex-grow overflow-y-auto p-8 space-y-8">
                 {navLinks.map((link) => (
                   <div key={link.name} className="space-y-3">
-                    {link.external ? (
-                      <a
-                        href={link.path}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-between gap-3 text-xl font-black text-slate-900 hover:text-primary transition-colors px-3 py-2 rounded-2xl"
-                      >
-                        <span className="flex items-center gap-3">
-                          {link.icon ? <link.icon size={20} className="text-primary/80" /> : null}
-                          {link.name}
-                        </span>
-                      </a>
-                    ) : link.subLinks ? (
+                    {link.subLinks ? (
                       <button
                         type="button"
                         onClick={() => setMobileOpen(mobileOpen === link.name ? null : link.name)}
                         className={`w-full flex items-center justify-between gap-3 text-xl font-black transition-colors px-3 py-2 rounded-2xl ${
-                          location.pathname === link.path 
+                          location.pathname.startsWith(link.path) 
                             ? 'bg-primary/10 text-primary shadow-lg shadow-primary/20' 
                             : 'text-slate-900 hover:bg-slate-100'
                         }`}
@@ -219,6 +248,7 @@ const Navbar = () => {
                     ) : (
                       <Link
                         to={link.path}
+                        onClick={() => setIsMenuOpen(false)}
                         className={`flex items-center gap-3 text-xl font-black transition-colors px-3 py-2 rounded-2xl ${
                           location.pathname === link.path 
                             ? 'bg-primary/10 text-primary shadow-lg shadow-primary/20' 
@@ -237,6 +267,7 @@ const Navbar = () => {
                             <Link 
                               key={sub.name} 
                               to={sub.path} 
+                              onClick={() => setIsMenuOpen(false)}
                               className={`block text-base font-semibold transition-colors ${
                                 active ? 'text-primary' : 'text-slate-700 hover:text-primary'
                               }`}
@@ -251,15 +282,24 @@ const Navbar = () => {
                 ))}
               </div>
               <div className="border-t border-slate-100 p-6 grid grid-cols-2 gap-3 bg-white">
-                <Link
-                  to="/auth/login"
-                  className="text-center font-bold text-sm uppercase tracking-widest px-4 py-3 rounded-2xl transition-all text-slate-800 border border-slate-200 hover:bg-slate-50"
-                >
-                  Portal
-                </Link>
+                {user ? (
+                  <button
+                    onClick={logout}
+                    className="btn-secondary text-center font-bold text-sm uppercase tracking-widest"
+                  >
+                    Logout
+                  </button>
+                ) : (
+                  <Link
+                    to="/auth/login"
+                    className="btn-secondary text-center font-bold text-sm uppercase tracking-widest"
+                  >
+                    Portal
+                  </Link>
+                )}
                 <Link
                   to="/donate"
-                  className="text-center bg-secondary text-white px-4 py-3 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-secondary/30"
+                  className="btn-primary text-center font-black text-sm uppercase tracking-widest"
                 >
                   Donate Now
                 </Link>

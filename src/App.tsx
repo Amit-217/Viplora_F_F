@@ -18,12 +18,15 @@ import ForgotPassword from './pages/Auth/Forget/ForgotPassword';
 import GalleryGrid from './pages/Gallery/GalleryGrid';
 import ManagePrograms from './pages/Admin/ManagePrograms';
 import ManageVolunteers from './pages/Admin/ManageVolunteers';
+import ManageMessages from './pages/Admin/ManageMessages';
 import ManageBlog from './pages/Admin/ManageBlog';
 import ManageGallery from './pages/Admin/ManageGallery';
 import ManageDonations from './pages/Admin/ManageDonations';
 import ManageAdmins from './pages/Admin/ManageAdmins';
+import ManageActivities from './pages/Admin/ManageActivities';
 import UserDashboard from './pages/Dashboard/UserDashboard';
 import VolunteerDashboard from './pages/Volunteer/Dashboard/VolunteerDashboard';
+import ManageVolunteerBlog from './pages/Volunteer/Dashboard/ManageVolunteerBlog';
 import Vision from './pages/About/Vision/Vision';
 import Story from './pages/About/Story/Story';
 import Team from './pages/About/Team/Team';
@@ -33,6 +36,7 @@ import Success from './pages/Donate/Success/Success';
 import { useAuth } from './context/AuthContext';
 
 import { Toaster } from 'react-hot-toast';
+import SessionTimeoutModal from './components/common/SessionTimeoutModal';
 
 // Auth Guard
 const ProtectedRoute = ({ children, role }: { children: React.ReactNode, role?: string }) => {
@@ -51,11 +55,13 @@ const AppContent = () => {
     <div className="min-h-screen flex flex-col">
       {!isAdminRoute && <Navbar />}
       <Toaster position="top-right" toastOptions={{ className: 'font-bold' }} />
+      <SessionTimeoutModal />
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
           
           {/* About Routes */}
+          <Route path="/about" element={<Vision />} />
           <Route path="/about/vision" element={<Vision />} />
           <Route path="/about/story" element={<Story />} />
           <Route path="/about/team" element={<Team />} />
@@ -72,6 +78,7 @@ const AppContent = () => {
           {/* Volunteer Routes */}
           <Route path="/volunteer/apply" element={<VolunteerApply />} />
           <Route path="/volunteer/dashboard" element={<ProtectedRoute role="volunteer"><VolunteerDashboard /></ProtectedRoute>} />
+          <Route path="/volunteer/blogs" element={<ProtectedRoute role="volunteer"><ManageVolunteerBlog /></ProtectedRoute>} />
 
           {/* Blog Routes */}
           <Route path="/blog" element={<BlogList />} />
@@ -98,6 +105,8 @@ const AppContent = () => {
           <Route path="/admin/gallery" element={<ProtectedRoute role="admin"><ManageGallery /></ProtectedRoute>} />
           <Route path="/admin/donations" element={<ProtectedRoute role="admin"><ManageDonations /></ProtectedRoute>} />
           <Route path="/admin/manage-admins" element={<ProtectedRoute role="admin"><ManageAdmins /></ProtectedRoute>} />
+          <Route path="/admin/messages" element={<ProtectedRoute role="admin"><ManageMessages /></ProtectedRoute>} />
+          <Route path="/admin/activities" element={<ProtectedRoute role="admin"><ManageActivities /></ProtectedRoute>} />
         </Routes>
       </main>
       {!isAdminRoute && <Footer />}
@@ -105,9 +114,18 @@ const AppContent = () => {
   );
 };
 
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
+
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <AppContent />
     </Router>
   );

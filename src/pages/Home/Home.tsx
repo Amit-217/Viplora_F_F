@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { contactInfo } from '../../config/contactInfo';
 import { resolveImageUrl, handleImgError } from '../../utils/imageUrl';
+import { toast } from 'react-hot-toast';
 
 const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -35,7 +36,7 @@ const Home = () => {
     { label: 'Lives Impacted', value: '10+', icon: Users },
     { label: 'Programs', value: '01+', icon: FileText },
     { label: 'Volunteers', value: '08+', icon: Heart },
-    { label: 'CSR Partners', value: '0', icon: ShieldCheck },
+    { label: 'CSR Partnerships', value: 'Open', icon: ShieldCheck },
   ];
 
   const initiatives = [
@@ -62,6 +63,32 @@ const Home = () => {
   ];
 
   const [featuredPrograms, setFeaturedPrograms] = useState<any[]>([]);
+
+  // CSR Modal states
+  const [isCsrModalOpen, setIsCsrModalOpen] = useState(false);
+  const [csrData, setCsrData] = useState({ name: '', company: '', email: '', message: '' });
+  const [csrLoading, setCsrLoading] = useState(false);
+
+  const handleCsrSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCsrLoading(true);
+    try {
+      await api.post('/contact', {
+        name: csrData.name,
+        email: csrData.email,
+        subject: `CSR Proposal Request - ${csrData.company}`,
+        message: csrData.message || `Hi, we are interested in CSR partnering. Company: ${csrData.company}`
+      });
+      toast.success('CSR request sent successfully!');
+      setIsCsrModalOpen(false);
+      setCsrData({ name: '', company: '', email: '', message: '' });
+    } catch (err) {
+      toast.error('Failed to send request. Try again layouts flawlessly.');
+      console.error(err);
+    } finally {
+      setCsrLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -158,16 +185,16 @@ const Home = () => {
             className="flex flex-col md:flex-row items-center justify-between gap-6"
           >
             <div className="flex items-center gap-6">
-              <div className="w-16 h-16 shrink-0 bg-white dark:bg-slate-800 text-green-500 rounded-2xl flex items-center justify-center relative shadow-lg border border-slate-100 dark:border-slate-700">
+              <div className="w-16 h-16 shrink-0 bg-white dark:bg-slate-800 text-accent rounded-2xl flex items-center justify-center relative shadow-lg border border-slate-100 dark:border-slate-700">
                 <span className="absolute -top-2 -right-2 flex h-4 w-4">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent/75 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-4 w-4 bg-accent"></span>
                 </span>
                 <Sprout size={32} />
               </div>
-              <p className="font-black text-slate-900 dark:text-white text-2xl md:text-4xl tracking-tight">Newly started viplora</p>
+              <p className="font-black text-slate-900 dark:text-white text-2xl md:text-4xl tracking-tight">A Growing Movement for Sustainable Impact</p>
             </div>
-            <Link to="/programs" className="text-white bg-primary font-bold text-lg flex items-center gap-2 group whitespace-nowrap px-10 py-5 rounded-2xl shadow-xl shadow-primary/30 hover:shadow-2xl hover:-translate-y-1 transition-all w-full md:w-auto justify-center">
+            <Link to="/programs" className="btn-primary font-bold text-lg flex items-center gap-2 group whitespace-nowrap w-full md:w-auto justify-center">
               Join now <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </motion.div>
@@ -184,9 +211,9 @@ const Home = () => {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="text-center p-8 rounded-2xl bg-primary/5 border border-primary/10 flex flex-col items-center"
+                className="text-center p-8 rounded-2xl bg-background-light border border-gray-200 flex flex-col items-center shadow-sm hover:shadow-md transition-all" 
               >
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-4">
+                <div className="w-12 h-12 bg-accent/30 rounded-xl flex items-center justify-center text-primary mb-4">
                   <stat.icon size={24} />
                 </div>
                 <p className="text-4xl font-black text-primary mb-2">{stat.value}</p>
@@ -293,18 +320,124 @@ const Home = () => {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
-            <a href={`mailto:${contactInfo.email}`} className="bg-primary text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 hover:-translate-y-1 transition-all shadow-lg shadow-primary/30">
+            <button 
+              onClick={() => setIsCsrModalOpen(true)} 
+              className="btn-primary text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 hover:-translate-y-1 transition-all shadow-lg shadow-primary/30"
+            >
               <FileText size={20} />
               Get CSR Proposal
-            </a>
-            <Link to="/contact" className="border-2 border-primary text-primary dark:text-white dark:border-slate-600 px-8 py-4 rounded-xl font-bold hover:bg-primary hover:text-white transition-all text-center hover:-translate-y-1">
+            </button>
+            <Link to="/contact" className="btn-secondary text-primary dark:text-white dark:border-slate-600 px-8 py-4 rounded-xl font-bold hover:bg-primary hover:text-white transition-all text-center hover:-translate-y-1">
               Contact Partnerships
             </Link>
           </div>
         </div>
       </section>
 
+      {/* Section: Our Journey / Gallery */}
+      <section className="py-24 bg-background-light dark:bg-background-dark">
+        <div className="max-w-[1320px] mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-slate-900 dark:text-white">Our Journey in Mogarga, Latur</h2>
+            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mt-3">
+              Real-world stories and volunteer moments that showcase our growing impact and community-led trust.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {['/edu.jfif', '/edu1.jfif', 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=2070'].map((src, index) => (
+              <div key={index} className="relative rounded-2xl overflow-hidden group shadow-lg border border-gray-200 dark:border-slate-700">
+                <img src={src} alt={`Journey ${index + 1}`} className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+                  <p className="font-bold text-xl">Volunteer Field Visit</p>
+                  <p className="text-sm mt-1">From Mogarga to neighborhood upliftment, every photo tells a story.</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
+      {/* CSR Request Modal Overlay absolute flawless */}
+      <AnimatePresence>
+        {isCsrModalOpen && (
+          <div className="fixed inset-0 z-[160] flex items-center justify-center p-4">
+            <div onClick={() => setIsCsrModalOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+              animate={{ scale: 1, opacity: 1, y: 0 }} 
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl p-8 text-left space-y-6 overflow-hidden md:max-w-md"
+            >
+              <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-primary via-emerald-400 to-teal-600" />
+              
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">CSR Proposal Request</h2>
+                <button onClick={() => setIsCsrModalOpen(false)} className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full"><FileText size={20} className="text-slate-400" /></button>
+              </div>
+
+              <form onSubmit={handleCsrSubmit} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Your Name</label>
+                  <input 
+                    required 
+                    type="text" 
+                    value={csrData.name} 
+                    onChange={e => setCsrData({...csrData, name: e.target.value})} 
+                    className="w-full px-5 py-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 outline-none focus:ring-2 focus:ring-primary/20 text-slate-900 dark:text-white font-medium" 
+                    placeholder="John Doe" 
+                  />
+                </div>
+                
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Company Name</label>
+                  <input 
+                    required 
+                    type="text" 
+                    value={csrData.company} 
+                    onChange={e => setCsrData({...csrData, company: e.target.value})} 
+                    className="w-full px-5 py-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 outline-none focus:ring-2 focus:ring-primary/20 text-slate-900 dark:text-white font-medium" 
+                    placeholder="Acme Inc." 
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Work Email</label>
+                  <input 
+                    required 
+                    type="email" 
+                    value={csrData.email} 
+                    onChange={e => setCsrData({...csrData, email: e.target.value})} 
+                    className="w-full px-5 py-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 outline-none focus:ring-2 focus:ring-primary/20 text-slate-900 dark:text-white font-medium" 
+                    placeholder="john@company.com" 
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Short Message (Optional)</label>
+                  <textarea 
+                    value={csrData.message} 
+                    onChange={e => setCsrData({...csrData, message: e.target.value})} 
+                    rows={3} 
+                    className="w-full px-5 py-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 outline-none focus:ring-2 focus:ring-primary/20 text-slate-900 dark:text-white font-medium resize-none" 
+                    placeholder="Write details about your queries..." 
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <button 
+                    type="submit" 
+                    disabled={csrLoading}
+                    className="w-full btn-primary py-4 rounded-xl font-bold shadow-xl shadow-primary/20 hover:-translate-y-1 transition-all flex items-center justify-center gap-2"
+                  >
+                    {csrLoading ? 'Sending...' : 'Submit Request'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

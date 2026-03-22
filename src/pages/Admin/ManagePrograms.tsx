@@ -3,7 +3,7 @@ import AdminSidebar from './components/AdminSidebar';
 import api from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { resolveImageUrl, handleImgError } from '../../utils/imageUrl';
 
 const ManagePrograms = () => {
@@ -11,8 +11,17 @@ const ManagePrograms = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<any>(null);
-  const { register, handleSubmit, reset, setValue } = useForm();
+  const { register, handleSubmit, reset, setValue, watch, control } = useForm();
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "impactStats"
+  });
   const [formLoading, setFormLoading] = useState(false);
+  const [viewingProgram, setViewingProgram] = useState<any>(null);
+  const [existingGallery, setExistingGallery] = useState<string[]>([]);
+  const [existingCover, setExistingCover] = useState<string>("");
+
+  const selectedType = watch('type', 'event');
 
   useEffect(() => {
     fetchPrograms();
@@ -32,14 +41,42 @@ const ManagePrograms = () => {
   const onSubmit = async (data: any) => {
     setFormLoading(true);
     try {
+      const formData = new FormData();
+      Object.keys(data).forEach(key => {
+        if (key !== 'image' && key !== 'gallery' && key !== 'impactStats') {
+          formData.append(key, data[key]);
+        }
+      });
+
+      if (data.impactStats && data.impactStats.length > 0) {
+        formData.append('impactStats', JSON.stringify(data.impactStats));
+      }
+
+      if (data.image?.[0]) {
+        formData.append('image', data.image[0]);
+      }
+      
+      if (data.gallery && data.gallery.length > 0) {
+        Array.from(data.gallery).forEach((file: any) => {
+          formData.append('gallery', file);
+        });
+      }
+
+      const config = { headers: { 'Content-Type': 'multipart/form-data' } };
+
       if (editingProgram) {
-        await api.put(`/programs/${editingProgram._id}`, data);
+        formData.append('existingGallery', JSON.stringify(existingGallery));
+        if (!existingCover) {
+          formData.append('removeCoverImage', 'true');
+        }
+        await api.put(`/programs/${editingProgram._id}`, formData, config);
       } else {
-        await api.post('/programs', data);
+        await api.post('/programs', formData, config);
       }
       setIsModalOpen(false);
       reset();
       setEditingProgram(null);
+      setExistingGallery([]);
       fetchPrograms();
     } catch (err) {
       console.error(err);
@@ -50,9 +87,19 @@ const ManagePrograms = () => {
 
   const handleEdit = (program: any) => {
     setEditingProgram(program);
-    Object.keys(program).forEach((key) => {
-      setValue(key as any, program[key]);
-    });
+    setExistingGallery(program.gallery || []);
+    setExistingCover(program.image || "");
+    
+    // Format dates for HTML input types
+    const formattedProgram = { ...program };
+    if (program.date) {
+      formattedProgram.date = new Date(program.date).toISOString().split('T')[0];
+    }
+    if (program.targetDate) {
+      formattedProgram.targetDate = new Date(program.targetDate).toISOString().split('T')[0];
+    }
+
+    reset(formattedProgram);
     setIsModalOpen(true);
   };
 
@@ -78,7 +125,7 @@ const ManagePrograms = () => {
             <p className="text-gray-500">Create and monitor your impact campaigns.</p>
           </div>
           <button 
-            onClick={() => { reset(); setEditingProgram(null); setIsModalOpen(true); }}
+            onClick={() => { reset(); setEditingProgram(null); setExistingGallery([]); setIsModalOpen(true); }}
             className="btn-primary flex items-center gap-2"
           >
             <Plus size={20} /> Create Program
@@ -94,6 +141,7 @@ const ManagePrograms = () => {
                 <tr className="bg-gray-50 border-b border-gray-100 text-gray-400 text-xs font-bold uppercase tracking-widest">
                   <th className="px-8 py-6">Program</th>
                   <th className="px-8 py-6">Category</th>
+                  <th className="px-8 py-6">Type</th>
                   <th className="px-8 py-6">Raised / Goal</th>
                   <th className="px-8 py-6">Status</th>
                   <th className="px-8 py-6 text-right">Actions</th>
@@ -102,8 +150,8 @@ const ManagePrograms = () => {
               <tbody className="divide-y divide-gray-50">
                 {programs.map((program: any) => (
                   <tr key={program._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-4">
+                    <td className="px-8 py-6 cursor-pointer group" onClick={() => setViewingProgram(program)}>
+                      <div className="flex items-center gap-4 group-hover:translate-x-1 transition-transform">
                         <img 
                           src={resolveImageUrl(program.image)} 
                           onError={handleImgError}
@@ -115,10 +163,22 @@ const ManagePrograms = () => {
                     </td>
                     <td className="px-8 py-6 capitalize font-medium text-gray-600">{program.category}</td>
                     <td className="px-8 py-6">
-                      <div className="flex flex-col gap-1">
-                        <span className="font-bold text-primary">₹{program.raisedAmount.toLocaleString()}</span>
-                        <span className="text-xs text-gray-400 italic">Target: ₹{program.goalAmount.toLocaleString()}</span>
-                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        program.type === 'fundraiser' ? 'bg-orange-100 text-orange-600' :
+                        program.type === 'event' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'
+                      }`}>
+                        {(program.type || 'fundraiser').toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-8 py-6">
+                      {program.type === 'fundraiser' ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="font-bold text-primary">₹{program.raisedAmount?.toLocaleString() || 0}</span>
+                          <span className="text-xs text-gray-400 italic">Target: ₹{program.goalAmount?.toLocaleString() || 0}</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-sm">-</span>
+                      )}
                     </td>
                     <td className="px-8 py-6">
                       <span className={`px-4 py-1.5 rounded-full text-xs font-bold ${program.isActive ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
@@ -139,7 +199,7 @@ const ManagePrograms = () => {
         {/* Create/Edit Modal */}
         <AnimatePresence>
           {isModalOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
                 <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-primary text-white">
@@ -162,14 +222,73 @@ const ManagePrograms = () => {
                           ))}
                         </select>
                       </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Type</label>
+                        <select {...register('type', { required: true })} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20 bg-white">
+                          <option value="event">EVENT</option>
+                          <option value="fundraiser">FUNDRAISER</option>
+                          <option value="announcement">ANNOUNCEMENT</option>
+                        </select>
+                      </div>
                       <div className="grid grid-cols-2 gap-4">
+                        {selectedType === 'fundraiser' && (
+                          <>
+                            <div>
+                              <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Goal Amount (₹)</label>
+                              <input type="number" {...register('goalAmount', { required: selectedType === 'fundraiser' })} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Target Date</label>
+                              <input type="date" {...register('targetDate')} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" />
+                            </div>
+                          </>
+                        )}
+                        {(selectedType === 'event' || selectedType === 'announcement') && (
+                          <div>
+                            <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">{selectedType === 'event' ? 'Event Date' : 'Announcement Date'}</label>
+                            <input type="date" {...register('date')} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                        )}
                         <div>
-                          <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Goal Amount (₹)</label>
-                          <input type="number" {...register('goalAmount', { required: true })} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" />
+                          <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Cover Image</label>
+                          {editingProgram && existingCover ? (
+                            <div className="relative group w-full h-40 rounded-2xl overflow-hidden mb-3 border border-gray-100 shadow-sm">
+                              <img src={resolveImageUrl(existingCover)} className="w-full h-full object-cover" alt="" />
+                              <button 
+                                type="button" 
+                                onClick={() => setExistingCover("")}
+                                className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ) : (
+                            <input type="file" accept="image/*" {...register('image')} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" />
+                          )}
                         </div>
                         <div>
-                          <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Cover Image URL</label>
-                          <input {...register('image', { required: true })} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" placeholder="https://..." />
+                          <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Gallery Images</label>
+                          <input type="file" accept="image/*" multiple {...register('gallery')} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" />
+                          
+                          {editingProgram && existingGallery.length > 0 && (
+                            <div className="mt-4">
+                              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Existing Gallery</label>
+                              <div className="grid grid-cols-4 gap-3">
+                                {existingGallery.map((img: string, idx: number) => (
+                                  <div key={idx} className="relative group rounded-xl overflow-hidden border border-gray-100 shadow-sm">
+                                    <img src={resolveImageUrl(img)} className="w-full h-20 object-cover" alt="" />
+                                    <button 
+                                      type="button" 
+                                      onClick={() => setExistingGallery(prev => prev.filter(item => item !== img))}
+                                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                                    >
+                                      <X size={14} />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -183,6 +302,36 @@ const ManagePrograms = () => {
                         <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Full Description</label>
                         <textarea {...register('description', { required: true })} rows={6} className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-primary/20" />
                       </div>
+
+                      {/* Impact Goals Section */}
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest">Our Impact Goals</label>
+                          <button type="button" onClick={() => append({ label: '', value: '' })} className="text-primary text-sm font-bold flex items-center gap-1 hover:underline">
+                            <Plus size={16} /> Add Goal
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          {fields.map((field, index) => (
+                            <div key={field.id} className="flex gap-4 items-center bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                              <input 
+                                {...register(`impactStats.${index}.label` as const)} 
+                                placeholder="e.g. Trees Planted" 
+                                className="flex-1 px-4 py-2 rounded-xl bg-white border border-gray-100 outline-none focus:ring-2 focus:ring-primary/20" 
+                              />
+                              <input 
+                                {...register(`impactStats.${index}.value` as const)} 
+                                placeholder="e.g. 500+" 
+                                className="w-32 px-4 py-2 rounded-xl bg-white border border-gray-100 outline-none focus:ring-2 focus:ring-primary/20" 
+                              />
+                              <button type="button" onClick={() => remove(index)} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all">
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -193,6 +342,102 @@ const ManagePrograms = () => {
                     </button>
                   </div>
                 </form>
+              </motion.div>
+            </div>
+          )}
+
+          {/* View Details Modal */}
+          {viewingProgram && (
+            <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingProgram(null)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-white w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+                <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-900 text-white">
+                  <div>
+                    <h2 className="text-2xl font-bold">{viewingProgram.title}</h2>
+                    <span className="text-xs text-gray-400 capitalize">{viewingProgram.type} • {viewingProgram.category}</span>
+                  </div>
+                  <button onClick={() => setViewingProgram(null)} className="p-2 hover:bg-white/10 rounded-full transition-all"><X size={24} /></button>
+                </div>
+
+                <div className="p-10 space-y-8 overflow-y-auto flex-grow">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="md:col-span-2 space-y-6">
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Short Description</h4>
+                        <p className="text-gray-700 font-medium">{viewingProgram.shortDescription}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Full Description</h4>
+                        <p className="text-gray-600 whitespace-pre-wrap">{viewingProgram.description}</p>
+                      </div>
+
+                      {/* Info grid */}
+                      <div className="grid grid-cols-2 gap-4 bg-gray-50 p-6 rounded-3xl">
+                        {viewingProgram.type === 'fundraiser' && (
+                          <>
+                            <div>
+                              <span className="block text-xs text-gray-400 font-bold uppercase">Goal Amount</span>
+                              <span className="text-lg font-bold text-primary">₹{viewingProgram.goalAmount?.toLocaleString()}</span>
+                            </div>
+                            <div>
+                              <span className="block text-xs text-gray-400 font-bold uppercase">Raised Amount</span>
+                              <span className="text-lg font-bold text-green-600">₹{viewingProgram.raisedAmount?.toLocaleString()}</span>
+                            </div>
+                            {viewingProgram.targetDate && (
+                              <div className="col-span-2">
+                                <span className="block text-xs text-gray-400 font-bold uppercase">Target Date</span>
+                                <span className="text-gray-700 font-medium">{new Date(viewingProgram.targetDate).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                          </>
+                        )}
+                        {(viewingProgram.type === 'event' || viewingProgram.type === 'announcement') && viewingProgram.date && (
+                          <div>
+                            <span className="block text-xs text-gray-400 font-bold uppercase">Date</span>
+                            <span className="text-gray-700 font-medium">{new Date(viewingProgram.date).toLocaleDateString()}</span>
+                          </div>
+                        )}
+                        {viewingProgram.location && (
+                          <div>
+                            <span className="block text-xs text-gray-400 font-bold uppercase">Location</span>
+                            <span className="text-gray-700 font-medium">{viewingProgram.location}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Images Column */}
+                    <div className="space-y-6">
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Cover Image</h4>
+                        <img src={resolveImageUrl(viewingProgram.image)} className="w-full h-48 rounded-2xl object-cover border border-gray-100 shadow-sm" alt="" />
+                      </div>
+                      {viewingProgram.gallery && viewingProgram.gallery.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Gallery</h4>
+                          <div className="grid grid-cols-2 gap-3">
+                            {viewingProgram.gallery.map((img: string, index: number) => (
+                              <img key={index} src={resolveImageUrl(img)} className="w-full h-24 rounded-xl object-cover border border-gray-100" alt="" />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-8 border-t border-gray-50 flex justify-end gap-4 bg-gray-50">
+                  <button onClick={() => setViewingProgram(null)} className="px-6 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-200 transition-all">Close</button>
+                  <button 
+                    onClick={() => {
+                      handleEdit(viewingProgram);
+                      setViewingProgram(null);
+                    }} 
+                    className="px-6 py-3 bg-primary text-white rounded-xl font-bold flex items-center gap-2 hover:bg-opacity-90 shadow-lg shadow-primary/10"
+                  >
+                    <Edit size={18} /> Edit Program
+                  </button>
+                </div>
               </motion.div>
             </div>
           )}

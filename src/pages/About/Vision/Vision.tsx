@@ -96,17 +96,11 @@ const Vision = () => {
               <div className="w-20 h-20 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mb-8 shadow-sm">
                 <Eye size={40} />
               </div>
-              <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-6">Our Vision (The Final Goal)</h2>
+              <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-6">Our Vision</h2>
               <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
                 To build a sustainable and empowered society where every individual has access to education, essential resources, and opportunities to live with dignity while preserving nature and supporting future generations.
               </p>
-              <div className="flex flex-wrap gap-3 mt-8">
-                {['Education', 'Basic Needs', 'Environment', 'Long-term Impact'].map((tag, i) => (
-                  <span key={i} className="bg-primary/5 text-primary text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2">
-                    <CheckCircle2 size={16} /> {tag}
-                  </span>
-                ))}
-              </div>
+
             </div>
           </motion.div>
 
@@ -121,7 +115,7 @@ const Vision = () => {
               <div className="w-20 h-20 bg-white/20 backdrop-blur-md text-white rounded-3xl flex items-center justify-center mb-8 shadow-sm">
                 <Target size={40} />
               </div>
-              <h2 className="text-4xl font-black mb-6">Our Mission (Current & Future)</h2>
+              <h2 className="text-4xl font-black mb-6">Our Mission</h2>
               <p className="text-lg opacity-95 leading-relaxed font-medium">
                 To initiate change through education and skill development, and gradually expand into areas of environmental sustainability, resource accessibility, and community upliftment through technology, innovation, and collective efforts.
               </p>

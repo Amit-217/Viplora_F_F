@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
-import { motion } from 'framer-motion';
-import { Heart, ShieldCheck, CreditCard, User, Mail, Phone, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, ShieldCheck, CreditCard, User, Mail, Phone, ChevronRight, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { contactInfo } from '../../../config/contactInfo';
 
@@ -21,10 +21,11 @@ const Donate = () => {
     email: '',
     phone: ''
   });
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handlePayment = async () => {
-    toast.error(`Payments are temporarily unavailable. Please contact ${contactInfo.phone} or ${contactInfo.email} to donate.`, { duration: 6000 });
+    setIsModalOpen(true);
   };
 
   return (
@@ -101,25 +102,25 @@ const Donate = () => {
                 ].map((item) => (
                   <button
                     key={item.value}
-                    onClick={() => { setSelectedAmount(item.value); setCustomAmount(''); }}
-                    className={`p-6 rounded-2xl font-bold flex flex-col items-center justify-center gap-1 aspect-square border-2 transition-all ${
+                    onClick={() => { setSelectedAmount(item.value); setCustomAmount(''); handlePayment(); }}
+                    className={`p-4 px-6 rounded-2xl font-bold flex flex-row items-center justify-between h-16 border-2 transition-all ${
                       selectedAmount === item.value && !customAmount 
                         ? 'bg-primary text-white border-primary shadow-lg' 
                         : 'bg-white text-primary border-primary/10 hover:border-primary/40 text-slate-900'
                     }`}
                   >
-                    <span className="text-2xl font-black">₹{item.value}</span>
+                    <span className="text-xl font-black">₹{item.value}</span>
                     <span className={`text-xs font-medium ${selectedAmount === item.value && !customAmount ? 'text-white/80' : 'text-slate-400'}`}>
                       {item.label}
                     </span>
                   </button>
                 ))}
-                <div className="relative aspect-square">
+                <div className="relative h-16">
                   <input 
                     type="number"
                     placeholder="Custom"
                     value={customAmount}
-                    onChange={(e) => { setCustomAmount(e.target.value); setSelectedAmount(0); }}
+                    onChange={(e) => { setCustomAmount(e.target.value); setSelectedAmount(0); if(e.target.value.length >= 3) handlePayment(); }}
                     className="w-full h-full text-center text-xl font-bold rounded-2xl bg-gray-50 outline-none focus:ring-2 focus:ring-primary/20 border-2 border-transparent"
                   />
                 </div>
@@ -190,12 +191,9 @@ const Donate = () => {
 
             <button 
               onClick={handlePayment}
-              disabled={loading || !donorDetails.name || !donorDetails.email}
-              className={`w-full py-5 rounded-2xl font-bold text-lg text-white transition-all flex items-center justify-center gap-2 ${
-                loading ? 'bg-gray-400' : 'bg-primary hover:opacity-90 shadow-xl shadow-primary/20'
-              }`}
+              className="w-full py-5 rounded-2xl font-bold text-lg text-white transition-all flex items-center justify-center gap-2 bg-primary hover:opacity-90 shadow-xl shadow-primary/20"
             >
-              {loading ? 'Processing...' : `Donate ₹${customAmount || selectedAmount} Now`} <ChevronRight size={20} />
+              Donate ₹{customAmount || selectedAmount} Now <ChevronRight size={20} />
             </button>
             <p className="text-center text-xs text-slate-400 mt-4">
               Secure 256-bit SSL encrypted payment
@@ -204,6 +202,51 @@ const Donate = () => {
 
         </div>
       </div>
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-[160] flex items-center justify-center p-4">
+            <div onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+              animate={{ scale: 1, opacity: 1, y: 0 }} 
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative bg-white dark:bg-slate-900 w-full max-w-lg rounded-[3.5rem] shadow-2xl p-10 text-center space-y-6 overflow-hidden md:max-w-md"
+            >
+              {/* Gold gradients sidebar bar layouts correctly absolute flawless */}
+              <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-secondary via-yellow-400 to-amber-600" />
+              
+              <div className="w-20 h-20 bg-amber-50 dark:bg-amber-900/20 rounded-full flex items-center justify-center text-amber-500 mx-auto shadow-inner shadow-amber-200/30">
+                <ShieldCheck size={40} className="drop-shadow-sm" />
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Support Directly</h2>
+                <p className="text-gray-500 dark:text-slate-400 font-medium leading-relaxed">
+                  Online payments are temporarily resting. You can still create direct impact by reaching out to our team flawlessly!
+                </p>
+              </div>
+
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl space-y-3 border border-slate-100 dark:border-slate-800 shadow-inner">
+                <p className="font-black text-xl text-slate-800 dark:text-slate-200">Call Us</p>
+                <a href={`tel:${contactInfo.phone}`} className="text-2xl font-black text-primary block hover:underline">{contactInfo.phone}</a>
+                {contactInfo.phoneAlt && <a href={`tel:${contactInfo.phoneAlt}`} className="text-xl font-bold text-primary/70 block hover:underline">{contactInfo.phoneAlt}</a>}
+                <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60" />
+                <p className="font-medium text-sm text-slate-400">Email us at</p>
+                <a href={`mailto:${contactInfo.email}`} className="font-bold text-slate-700 dark:text-slate-300 hover:underline">{contactInfo.email}</a>
+              </div>
+
+              <div className="pt-2">
+                <button 
+                  onClick={() => setIsModalOpen(false)} 
+                  className="w-full btn-primary py-4 rounded-xl font-bold shadow-xl shadow-primary/20 hover:-translate-y-1 transition-all"
+                >
+                  Got It, Thanks!
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

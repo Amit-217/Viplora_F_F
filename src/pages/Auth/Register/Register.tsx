@@ -35,7 +35,7 @@ const Register = () => {
       >
         <div className="bg-primary p-8 text-white text-center">
           <h2 className="text-3xl font-bold">Join VIPLORA</h2>
-          <p className="opacity-80 mt-2">Become part of the change</p>
+          <p className="opacity-80 mt-2">Create your Donor / Regular User Account</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-6">
@@ -87,19 +87,7 @@ const Register = () => {
             {errors.password && <p className="text-red-500 text-xs mt-1">Password must be at least 6 characters</p>}
           </div>
 
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Register as</label>
-            <div className="relative">
-              <UserCheck className="absolute left-3 top-3 text-gray-400" size={20} />
-              <select
-                {...register('role')}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none bg-white"
-              >
-                <option value="user">Donor / Regular User</option>
-                <option value="volunteer">Volunteer</option>
-              </select>
-            </div>
-          </div>
+          <input type="hidden" value="user" {...register('role')} />
 
           <button
             type="submit"
