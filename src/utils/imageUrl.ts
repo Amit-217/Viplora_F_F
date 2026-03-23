@@ -2,7 +2,13 @@ import type { SyntheticEvent } from 'react';
 
 const FALLBACK_IMAGE = '/logo.png';
 
-const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+const apiBaseUrl = import.meta.env.VITE_API_URL;
+
+if (!apiBaseUrl) {
+  throw new Error('VITE_API_URL is not set. Define it in Viplora_Foundation_Web/.env');
+}
+
+const apiBase = apiBaseUrl.replace(/\/api\/?$/, '');
 
 export const resolveImageUrl = (raw?: string): string => {
   if (!raw) return FALLBACK_IMAGE;

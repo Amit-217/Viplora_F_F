@@ -80,7 +80,7 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Links (Hidden on Tablet/Mobile) */}
-          <div className="hidden xl:flex items-center gap-10">
+          <div className="hidden lg:flex items-center gap-10">
             {navLinks.map((link) => (
               <div 
                 key={link.name} 
@@ -185,7 +185,7 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Menu Toggle (Visible on lg and below) */}
-          <div className="xl:hidden flex items-center gap-4">
+          <div className="lg:hidden flex items-center gap-4">
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)} 
               className={`p-3 rounded-2xl transition-all bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 backdrop-blur-md`}

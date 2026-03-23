@@ -14,6 +14,17 @@
   --accent: #95D5B2;
 }
 
+html {
+  font-size: 80%;
+}
+
+@supports (zoom: 1) {
+  html {
+    zoom: 0.8;
+    font-size: 100%;
+  }
+}
+
 body {
   background-color: var(--color-background-light);
 }
