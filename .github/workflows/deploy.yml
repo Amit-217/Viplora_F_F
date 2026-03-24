@@ -1,0 +1,35 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - amit
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/Viplora_F_F   # 👈 CHANGE THIS
+
+            git pull origin amit
+
+            docker stop frontend-container || true
+            docker rm frontend-container || true
+
+            docker build \
+              --build-arg VITE_API_URL=https://viplorafoundation.in/api/ \
+              -t frontend-app .
+
+            docker run -d \
+              --name frontend-container \
+              -p 3000:80 \
+              --restart always \
+              frontend-app
