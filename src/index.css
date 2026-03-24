@@ -15,12 +15,11 @@
 }
 
 html {
-  font-size: 80%;
+  font-size: 100%;
 }
 
 @supports (zoom: 1) {
   html {
-    zoom: 0.8;
     font-size: 100%;
   }
 }
